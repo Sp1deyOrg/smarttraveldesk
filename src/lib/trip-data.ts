@@ -19,7 +19,7 @@ function place(
   lng: number,
   detail?: string,
 ): Place {
-  return { id, kind, name, lat, lng, detail };
+  return detail ? { id, kind, name, lat, lng, detail } : { id, kind, name, lat, lng };
 }
 
 function bookings(
