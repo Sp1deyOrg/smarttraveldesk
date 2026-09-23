@@ -43,16 +43,18 @@ export function normaliseWeights(w: Weights): Weights {
 
 /** Rebalance so the three sliders always total 100. */
 export function rebalance(w: Weights, changed: keyof Weights, value: number): Weights {
-  const others = (["time", "comfort", "cost"] as const).filter((k) => k !== changed);
+  const keys = (["time", "comfort", "cost"] as const).filter((k) => k !== changed);
+  const a = keys[0] as keyof Weights;
+  const b = keys[1] as keyof Weights;
   const remaining = 100 - value;
-  const otherTotal = w[others[0]] + w[others[1]];
-  const next = { ...w, [changed]: value } as Weights;
+  const otherTotal = w[a] + w[b];
+  const next: Weights = { ...w, [changed]: value };
   if (otherTotal === 0) {
-    next[others[0]] = Math.round(remaining / 2);
-    next[others[1]] = remaining - next[others[0]];
+    next[a] = Math.round(remaining / 2);
+    next[b] = remaining - next[a];
   } else {
-    next[others[0]] = Math.round((w[others[0]] / otherTotal) * remaining);
-    next[others[1]] = remaining - next[others[0]];
+    next[a] = Math.round((w[a] / otherTotal) * remaining);
+    next[b] = remaining - next[a];
   }
   return next;
 }
