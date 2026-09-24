@@ -159,9 +159,7 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  h1, h2, h3 {
-    letter-spacing: -0.015em;
-  }
+  h1, h2, h3 { letter-spacing: 0; }
 }
 
 /* Map surface */
@@ -197,4 +195,13 @@
 
 @utility animate-expand {
   animation: tf-expand 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
