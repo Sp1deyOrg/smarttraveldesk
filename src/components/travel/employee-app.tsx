@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowRight,
@@ -58,7 +58,7 @@ export function EmployeeApp() {
   const selectedTrip = trips.find((trip) => trip.id === selectedTripId);
   const query = search.trim().toLowerCase();
   const otherTrips = trips.filter((trip) => {
-    if (trip.id === featured.id) return false;
+    if (trip.id === featured?.id) return false;
     if (!query) return true;
     return [trip.title, trip.city, trip.purpose, trip.id].some((value) =>
       value.toLowerCase().includes(query),
@@ -81,6 +81,10 @@ export function EmployeeApp() {
     );
     toast.success(`Recommendation ${status}`);
   };
+
+  if (!featured) {
+    return <div className="grid min-h-screen place-items-center text-muted-foreground">No trips available.</div>;
+  }
 
   return (
     <div className="min-h-screen bg-background">
