@@ -1,5 +1,29 @@
 import type { ItineraryOption, Preferences, Trip, Weights } from "./types";
 
+export interface GradePolicy {
+  grade: string;
+  label: string;
+  metroCap: number;
+  otherCap: number;
+  economyUnderHrs: number;
+  cab: string;
+}
+
+/** Grade-wise policy. Mutable so Travel Desk edits apply to scoring everywhere. */
+export const POLICY_GRADES: GradePolicy[] = [
+  { grade: "L3", label: "Senior Associate", metroCap: 6000, otherCap: 4500, economyUnderHrs: 6, cab: "Sedan" },
+  { grade: "L4", label: "Manager", metroCap: 8000, otherCap: 6000, economyUnderHrs: 3, cab: "Sedan" },
+  { grade: "L5", label: "Senior Manager", metroCap: 11000, otherCap: 8500, economyUnderHrs: 2, cab: "Sedan or SUV" },
+  { grade: "L6", label: "Director", metroCap: 15000, otherCap: 11000, economyUnderHrs: 0, cab: "Premium sedan" },
+];
+export const TRAVELLER_GRADE = "L4";
+export function gradePolicy(grade = TRAVELLER_GRADE): GradePolicy {
+  return POLICY_GRADES.find((p) => p.grade === grade) ?? (POLICY_GRADES[1] as GradePolicy);
+}
+export function applyGradePolicies(next: GradePolicy[]) {
+  POLICY_GRADES.splice(0, POLICY_GRADES.length, ...next.map((g) => ({ ...g })));
+}
+
 export const POLICY = {
   grade: "L4 (Manager)",
   rules: [
@@ -9,7 +33,8 @@ export const POLICY = {
     "Sedan category cabs (no premium / SUV)",
     "Bookings at least 5 days before departure",
   ],
-  hotelCap: (tier: "metro" | "other") => (tier === "metro" ? 8000 : 6000),
+  hotelCap: (tier: "metro" | "other") =>
+    tier === "metro" ? gradePolicy().metroCap : gradePolicy().otherCap,
 };
 
 export function policyViolations(
@@ -23,8 +48,9 @@ export function policyViolations(
       `Hotel is ${Math.round(((option.hotelNightlyINR - cap) / cap) * 100)}% above the ₹${cap.toLocaleString("en-IN")} per-night cap for your grade`,
     );
   }
-  if (/business/i.test(option.flight) && option.doorToDoorMins < 180) {
-    out.push("Business class is not allowed on flights under 3 hours at grade L4");
+  const econHrs = gradePolicy().economyUnderHrs;
+  if (/business/i.test(option.flight) && option.doorToDoorMins < econHrs * 60) {
+    out.push(`Business class is not allowed on flights under ${econHrs} hours at grade L4`);
   }
   if (/SUV|premium/i.test(option.cab)) {
     out.push("Cab class is above the sedan limit for grade L4");

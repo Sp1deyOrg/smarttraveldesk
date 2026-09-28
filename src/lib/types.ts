@@ -136,3 +136,37 @@ export interface Preferences {
   hotelChains: string[];
   roomType: string;
 }
+
+export type Persona = "employee" | "desk" | "manager";
+
+export type EscalationKind = "fare" | "hotel" | "booking" | "assistance" | "sameday";
+
+export interface Escalation {
+  id: string;
+  tripId: string;
+  kind: EscalationKind;
+  title: string;
+  detail: string;
+  createdAt: string;
+  slaMins: number;
+  assignee?: string;
+  status: "open" | "resolved";
+  note?: string;
+  exceptionId?: string;
+}
+
+export interface PolicyException {
+  id: string;
+  tripId: string;
+  title: string;
+  justification: string;
+  policyCostINR: number;
+  requestedCostINR: number;
+  recommendation: string;
+  agentRecommends: "approve" | "reject";
+  optionId?: string;
+  escalationId?: string;
+  createdAt: string;
+  status: "pending" | "approved" | "rejected";
+  comment?: string;
+}
