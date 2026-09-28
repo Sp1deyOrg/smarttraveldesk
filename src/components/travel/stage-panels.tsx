@@ -43,11 +43,20 @@ function DiscoveryPanel({ trip }: { trip: Trip }) {
 }
 
 function PlanningPanel({ trip }: { trip: Trip }) {
-  const { prefs, setWeights, updateTrip, advanceStage, log } = useTrips();
+  const { prefs, grades, setWeights, updateTrip, advanceStage, log, raiseException } = useTrips();
   const [compare, setCompare] = useState<string[]>([]);
-  const ranked = useMemo(() => rankOptions(trip.options, trip.weights, trip.cityTier, prefs), [trip.options, trip.weights, trip.cityTier, prefs]);
+  const ranked = useMemo(() => rankOptions(trip.options, trip.weights, trip.cityTier, prefs), [trip.options, trip.weights, trip.cityTier, prefs, grades]);
   const changeWeight = (key: keyof Trip["weights"], value: number) => setWeights(trip.id, rebalance(trip.weights, key, value));
   const approve = (optionId: string, label: string) => {
+    const entry = ranked.find((r) => r.option.id === optionId);
+    if (entry && entry.violations.length) {
+      const compliant = ranked.filter((r) => !r.violations.length).map((r) => r.option.costINR);
+      const policyCost = compliant.length ? Math.min(...compliant) : entry.option.costINR;
+      raiseException({ tripId: trip.id, optionId, title: `${label}: ${entry.violations[0]}`, justification: `Riya chose '${label}' for ${trip.purpose.toLowerCase()} (${entry.option.comfort}/5 comfort, ${formatDuration(entry.option.doorToDoorMins)} door to door).`, policyCostINR: policyCost, requestedCostINR: entry.option.costINR, recommendation: `Reject: the best compliant option costs ${formatINR(policyCost)} and meets the agenda.`, agentRecommends: "reject" });
+      updateTrip(trip.id, { lastAction: `'${label}' awaiting manager approval (policy exception)` });
+      toast.warning("Outside policy — sent to your manager for approval");
+      return;
+    }
     updateTrip(trip.id, { selectedOptionId: optionId, stage: "confirmed", activeAgent: "pretrip", lastAction: `Approved ${label} · bookings being confirmed` });
     advanceStage(trip.id, "confirmed");
     log(trip.id, "pretrip", `Approved itinerary option '${label}'`, "approval");
@@ -67,7 +76,7 @@ function ConfirmedPanel({ trip }: { trip: Trip }) {
 }
 
 function LivePanel({ trip }: { trip: Trip }) {
-  const { updateTrip, log, addDecision } = useTrips();
+  const { updateTrip, log, addDecision, addEscalation } = useTrips();
   const simulate = () => {
     if (trip.live.disrupted) { toast("Disruption already simulated"); return; }
     updateTrip(trip.id, { live: { flight: `${trip.live.flight} · delayed 2h`, cab: "Pickup moved by 2 hours", hotel: trip.live.hotel, disrupted: true }, lastAction: "Flight delay detected · recovery plan prepared" });
@@ -77,6 +86,7 @@ function LivePanel({ trip }: { trip: Trip }) {
       toast.success("Live Agent rebooked automatically");
     } else {
       addDecision({ tripId: trip.id, agent: "live", title: "Approve rebooking after 2-hour delay", reasoning: "The current flight now misses the first meeting. A nearby departure preserves the agenda for ₹2,140 more.", confidence: 92, alternatives: ["Keep current flight and join first meeting remotely", "Move the meeting by two hours"] });
+      addEscalation({ tripId: trip.id, kind: "sameday", title: "Same-day change: rebook after 2-hour delay", detail: `${trip.live.flight} delayed 2h. Traveller approval pending; desk to secure seats on the next departure.`, slaMins: 30 });
       toast.warning("Rebooking needs your approval");
     }
   };
