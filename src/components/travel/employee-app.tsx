@@ -35,6 +35,7 @@ import {
 import { AGENTS, STAGES, type Trip } from "@/lib/types";
 import { AboutDialog, PreferencesDialog } from "./employee-dialogs";
 import { TripDetail } from "./trip-detail";
+import { PersonaSwitcher } from "./workspace";
 
 const SAMPLE_REQUEST =
   "Client review at Infosys Mysuru campus 14–16 Oct, prefer morning flights, keep it within policy";
@@ -187,6 +188,7 @@ function Header({
           <Settings2 />Set preferences
         </Button>
         <Button onClick={onNewTrip}><Plus />New trip</Button>
+        <PersonaSwitcher />
         <Button className="order-4 w-full sm:hidden" variant="outline" onClick={onPreferences}>
           <Settings2 />Set preferences
         </Button>
