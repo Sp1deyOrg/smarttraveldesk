@@ -162,9 +162,10 @@ export function TripProvider({ children }: { children: ReactNode }) {
         setExceptions((prev) => prev.map((e) => (e.id === id ? { ...e, status, comment } : e)));
         const verb = status === "approved" ? "approved" : "rejected";
         log(x.tripId, "pretrip", `Manager ${verb} exception “${x.title}”: ${comment}`, "approval");
-        if (status === "approved" && x.optionId) {
-          updateTrip(x.tripId, (t) =>
-            t.stage === "planning" ? { selectedOptionId: x.optionId, stage: "confirmed" } : {},
+        const approvedOption = x.optionId;
+        if (status === "approved" && approvedOption) {
+          updateTrip(x.tripId, (t): Partial<Trip> =>
+            t.stage === "planning" ? { selectedOptionId: approvedOption, stage: "confirmed" } : {},
           );
         }
         const linked = escalations.find((e) => e.id === x.escalationId || e.exceptionId === id);
