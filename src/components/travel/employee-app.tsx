@@ -35,7 +35,7 @@ import {
 import { AGENTS, STAGES, type Trip } from "@/lib/types";
 import { AboutDialog, PreferencesDialog } from "./employee-dialogs";
 import { TripDetail } from "./trip-detail";
-import { PersonaSwitcher } from "./workspace";
+import { PersonaSwitcher, SectionHeading } from "./workspace";
 
 const SAMPLE_REQUEST =
   "Client review at Infosys Mysuru campus 14–16 Oct, prefer morning flights, keep it within policy";
@@ -356,7 +356,7 @@ function CurrentTrip({ trip, onOpen }: { trip: Trip; onOpen: () => void }) {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2"><Badge>{activeStage?.label}</Badge><span className="text-xs font-bold text-muted-foreground">{trip.id}</span></div>
-          <h2 className="mt-4 text-2xl font-extrabold sm:text-3xl">{trip.title}</h2>
+          <h2 className="mt-4 text-2xl font-extrabold sm:text-3xl"><button type="button" onClick={onOpen} className="rounded-sm text-left hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{trip.title}</button></h2>
           <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground"><span className="flex items-center gap-1"><MapPin className="size-4" />{trip.originCity} → {trip.city}</span><span className="flex items-center gap-1"><CalendarDays className="size-4" />{formatDateRange(trip)}</span></p>
         </div>
         <Button onClick={onOpen}>Open trip<ChevronRight /></Button>
