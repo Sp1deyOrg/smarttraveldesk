@@ -35,7 +35,7 @@ import {
 import { AGENTS, STAGES, type Trip } from "@/lib/types";
 import { AboutDialog, PreferencesDialog } from "./employee-dialogs";
 import { TripDetail } from "./trip-detail";
-import { PersonaSwitcher } from "./workspace";
+import { PersonaSwitcher, SectionHeading } from "./workspace";
 
 const SAMPLE_REQUEST =
   "Client review at Infosys Mysuru campus 14–16 Oct, prefer morning flights, keep it within policy";
@@ -356,7 +356,7 @@ function CurrentTrip({ trip, onOpen }: { trip: Trip; onOpen: () => void }) {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2"><Badge>{activeStage?.label}</Badge><span className="text-xs font-bold text-muted-foreground">{trip.id}</span></div>
-          <h2 className="mt-4 text-2xl font-extrabold sm:text-3xl">{trip.title}</h2>
+          <h2 className="mt-4 text-2xl font-extrabold sm:text-3xl"><button type="button" onClick={onOpen} className="rounded-sm text-left hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{trip.title}</button></h2>
           <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground"><span className="flex items-center gap-1"><MapPin className="size-4" />{trip.originCity} → {trip.city}</span><span className="flex items-center gap-1"><CalendarDays className="size-4" />{formatDateRange(trip)}</span></p>
         </div>
         <Button onClick={onOpen}>Open trip<ChevronRight /></Button>
@@ -400,12 +400,9 @@ function DecisionQueue({ decisions, onApprove, onReject, onAlternatives }: { dec
 
 function TripCard({ trip, onOpen }: { trip: Trip; onOpen: () => void }) {
   const label = STAGES.find((stage) => stage.id === trip.stage)?.label ?? trip.stage;
-  return <article className="group flex min-h-64 flex-col rounded-md border bg-card p-5 shadow-sm transition-shadow hover:shadow-md"><div className="flex items-center justify-between gap-3"><Badge variant="outline">{label}</Badge><span className="text-xs font-bold text-muted-foreground">{trip.id}</span></div><h3 className="mt-5 text-lg font-extrabold">{trip.title}</h3><p className="mt-2 flex items-center gap-1 text-sm text-muted-foreground"><MapPin className="size-4" />{trip.city} · {formatDateRange(trip)}</p><div className="mt-5 flex-1 rounded-md bg-muted p-3"><p className="text-[10px] font-bold uppercase text-muted-foreground">Last agent action</p><p className="mt-1 text-sm font-medium leading-5">{trip.lastAction}</p></div><div className="mt-4 flex items-center gap-3"><Progress value={stageProgress(trip.stage)} aria-label={`${label} progress`} /><span className="text-xs font-bold text-muted-foreground">{Math.round(stageProgress(trip.stage))}%</span></div><Button className="mt-4 w-full" variant="outline" onClick={onOpen}>View trip<ChevronRight /></Button></article>;
+  return <article className="group flex min-h-64 flex-col rounded-md border bg-card p-5 shadow-sm transition-shadow hover:shadow-md"><div className="flex items-center justify-between gap-3"><Badge variant="outline">{label}</Badge><span className="text-xs font-bold text-muted-foreground">{trip.id}</span></div><h3 className="mt-5 text-lg font-extrabold"><button type="button" onClick={onOpen} className="rounded-sm text-left hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{trip.title}</button></h3><p className="mt-2 flex items-center gap-1 text-sm text-muted-foreground"><MapPin className="size-4" />{trip.city} · {formatDateRange(trip)}</p><div className="mt-5 flex-1 rounded-md bg-muted p-3"><p className="text-[10px] font-bold uppercase text-muted-foreground">Last agent action</p><p className="mt-1 text-sm font-medium leading-5">{trip.lastAction}</p></div><div className="mt-4 flex items-center gap-3"><Progress value={stageProgress(trip.stage)} aria-label={`${label} progress`} /><span className="text-xs font-bold text-muted-foreground">{Math.round(stageProgress(trip.stage))}%</span></div><Button className="mt-4 w-full" variant="outline" onClick={onOpen}>View trip<ChevronRight /></Button></article>;
 }
 
-function SectionHeading({ eyebrow, title }: { eyebrow: string; title: string }) {
-  return <div className="mb-3"><p className="text-xs font-extrabold uppercase text-primary">{eyebrow}</p><h2 className="mt-1 text-xl font-extrabold">{title}</h2></div>;
-}
 
 function makeDiscoveryTrip(id: string, result: TripExtraction, source: "ai" | "rules"): Trip {
   const city = result.destinationCity.trim();
