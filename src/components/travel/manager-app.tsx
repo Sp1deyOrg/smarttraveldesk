@@ -27,7 +27,7 @@ export function ManagerApp() {
           {pending.length ? (
             <div className="grid gap-4 lg:grid-cols-2">{pending.map((x) => <ExceptionCard key={x.id} x={x} />)}</div>
           ) : (
-            <div className="rounded-md border bg-card p-6 text-sm text-muted-foreground">No exceptions waiting. Agents route only policy breaches here.</div>
+            <div className="rounded-md border border-dashed bg-card px-4 py-10 text-center text-sm text-muted-foreground">No exceptions waiting. Agents route only policy breaches here.</div>
           )}
         </section>
         {decided.length > 0 && (

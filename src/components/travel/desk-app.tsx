@@ -41,10 +41,10 @@ export function DeskApp() {
   return (
     <div className="min-h-screen bg-background">
       <WorkspaceHeader />
-      <nav className="border-b bg-card">
+      <nav className="border-b bg-card" aria-label="Travel Desk sections">
         <div className="mx-auto flex max-w-[1500px] gap-1 overflow-x-auto px-4 sm:px-6">
           {TABS.map(([id, label]) => (
-            <button key={id} onClick={() => setTab(id)} className={`whitespace-nowrap border-b-2 px-3 py-3 text-sm font-semibold ${tab === id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{label}</button>
+            <Button key={id} variant="ghost" onClick={() => setTab(id)} aria-current={tab === id ? "page" : undefined} className={`h-auto shrink-0 rounded-none border-b-2 px-3 py-3 text-sm font-semibold ${tab === id ? "border-primary text-primary hover:text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{label}</Button>
           ))}
         </div>
       </nav>
@@ -87,11 +87,11 @@ function DeskHome({ onTab }: { onTab: (t: Tab) => void }) {
           <SectionHeading eyebrow="Needs the desk" title="Open escalations" right={<Button variant="outline" size="sm" onClick={() => onTab("queue")}>Open queue</Button>} />
           <div className="space-y-2">{open.slice(0, 5).map((e) => (
             <div key={e.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-card p-3 text-sm"><span><Badge variant="secondary" className="mr-2">{KIND_LABEL[e.kind]}</Badge>{e.title}</span><span className="text-muted-foreground">{e.tripId}</span></div>
-          ))}{!open.length && <p className="text-sm text-muted-foreground">Queue is clear.</p>}</div>
+          ))}{!open.length && <EmptyState>Queue is clear.</EmptyState>}</div>
         </div>
         <aside>
           <SectionHeading eyebrow="With managers" title="Pending exceptions" />
-          <div className="space-y-2">{pendingX.map((x) => <div key={x.id} className="rounded-md border bg-card p-3 text-sm"><p className="font-semibold">{x.title}</p><p className="text-xs text-muted-foreground">{x.tripId} · +{formatINR(x.requestedCostINR - x.policyCostINR)}</p></div>)}{!pendingX.length && <p className="text-sm text-muted-foreground">None pending.</p>}</div>
+          <div className="space-y-2">{pendingX.map((x) => <div key={x.id} className="rounded-md border bg-card p-3 text-sm"><p className="font-semibold">{x.title}</p><p className="text-xs text-muted-foreground">{x.tripId} · +{formatINR(x.requestedCostINR - x.policyCostINR)}</p></div>)}{!pendingX.length && <EmptyState>No exceptions are waiting.</EmptyState>}</div>
         </aside>
       </section>
     </>
@@ -109,7 +109,7 @@ function Queue({ onConsole }: { onConsole: (tripId: string) => void }) {
         <div className="flex gap-1">{(["open", "resolved"] as const).map((s) => <Button key={s} size="sm" variant={show === s ? "default" : "outline"} onClick={() => setShow(s)} className="capitalize">{s}</Button>)}</div>
       } />
       <div className="grid gap-4 lg:grid-cols-2">{list.map((e) => <EscalationCard key={e.id} e={e} now={now} onConsole={onConsole} />)}</div>
-      {!list.length && <p className="text-sm text-muted-foreground">Nothing here.</p>}
+      {!list.length && <EmptyState>No {show} requests.</EmptyState>}
     </section>
   );
 }
@@ -177,7 +177,7 @@ function BookingConsole({ tripId, onTrip }: { tripId: string | null; onTrip: (id
               <Button size="sm" onClick={() => confirm(option.id, option.label)}>Confirm</Button>
             </div>
           </div>
-        ))}</div>
+        ))}{!ranked.length && <EmptyState>No itinerary options are available for this trip yet.</EmptyState>}</div>
         <aside className="rounded-md border bg-card p-4">
           <p className="font-bold">Note to traveller</p>
           <Textarea className="mt-2" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Appears in Riya's agent activity log" />
@@ -201,7 +201,7 @@ function Tracker() {
   return (
     <section className="grid items-start gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
       <div className="h-[520px] overflow-hidden rounded-md border bg-muted">
-        {hydrated ? <Suspense fallback={null}><TripMap places={places} /></Suspense> : null}
+        {hydrated ? <Suspense fallback={<MapLoading />}><TripMap places={places} /></Suspense> : <MapLoading />}
       </div>
       <aside className="space-y-3">
         <SectionHeading eyebrow="On the road now" title={`${people.length} travellers`} />
@@ -311,4 +311,12 @@ function Analytics() {
       </div>
     </>
   );
+}
+
+function EmptyState({ children }: { children: React.ReactNode }) {
+  return <div className="rounded-md border border-dashed bg-card px-4 py-8 text-center text-sm text-muted-foreground">{children}</div>;
+}
+
+function MapLoading() {
+  return <div className="grid h-full place-items-center text-sm text-muted-foreground">Loading traveller map…</div>;
 }
