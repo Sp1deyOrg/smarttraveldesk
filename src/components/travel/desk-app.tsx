@@ -42,9 +42,9 @@ export function DeskApp() {
     <div className="min-h-screen bg-background">
       <WorkspaceHeader />
       <nav className="border-b bg-card" aria-label="Travel Desk sections">
-        <div className="mx-auto flex max-w-[1500px] gap-1 overflow-x-auto px-4 sm:px-6">
+        <div className="mx-auto flex max-w-[1500px] gap-1 overflow-x-auto px-4 sm:px-6" role="tablist" aria-label="Travel Desk sections">
           {TABS.map(([id, label]) => (
-            <Button key={id} variant="ghost" onClick={() => setTab(id)} aria-current={tab === id ? "page" : undefined} className={`h-auto shrink-0 rounded-none border-b-2 px-3 py-3 text-sm font-semibold ${tab === id ? "border-primary text-primary hover:text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{label}</Button>
+            <Button key={id} variant="ghost" role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`h-auto shrink-0 rounded-none border-b-2 px-3 py-3 text-sm font-semibold ${tab === id ? "border-primary text-primary hover:text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{label}</Button>
           ))}
         </div>
       </nav>
