@@ -171,8 +171,8 @@ function Header({
             <p className="mt-1 text-[10px] font-bold uppercase text-muted-foreground">Employee</p>
           </div>
         </div>
-        <div className="order-3 flex w-full items-center md:order-none md:w-[min(28vw,360px)]">
-          <Search className="pointer-events-none ml-3 mr-[-28px] size-4 text-muted-foreground" />
+        <div className="relative order-3 flex w-full items-center md:order-none md:w-[min(28vw,360px)]">
+          <Search className="pointer-events-none absolute left-3 size-4 text-muted-foreground" />
           <Input
             className="pl-9"
             value={search}
