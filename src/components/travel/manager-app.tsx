@@ -59,7 +59,7 @@ function ExceptionCard({ x }: { x: PolicyException }) {
   return (
     <article className="rounded-md border bg-card p-5 shadow-sm">
       <p className="text-xs font-bold text-primary">Riya Sharma · {x.tripId} · {trip?.city}</p>
-      <h3 className="mt-1 font-bold">{x.title}</h3>
+      <div className="mt-1 flex flex-wrap items-center justify-between gap-2"><h3 className="font-bold">{x.title}</h3><Badge variant={x.agentRecommends === "approve" ? "default" : "outline"}>Agent: {x.agentRecommends}</Badge></div>
       <p className="mt-3 text-sm"><span className="font-semibold">Justification: </span>{x.justification}</p>
       <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
         <div className="rounded-md bg-muted/50 p-2"><p className="text-xs text-muted-foreground">Policy</p>{formatINR(x.policyCostINR)}</div>

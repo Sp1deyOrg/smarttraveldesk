@@ -58,33 +58,6 @@ export function policyViolations(
   return Array.from(new Set(out));
 }
 
-export function normaliseWeights(w: Weights): Weights {
-  const total = w.time + w.comfort + w.cost || 1;
-  return {
-    time: Math.round((w.time / total) * 100),
-    comfort: Math.round((w.comfort / total) * 100),
-    cost: Math.round((w.cost / total) * 100),
-  };
-}
-
-/** Rebalance so the three sliders always total 100. */
-export function rebalance(w: Weights, changed: keyof Weights, value: number): Weights {
-  const keys = (["time", "comfort", "cost"] as const).filter((k) => k !== changed);
-  const a = keys[0] as keyof Weights;
-  const b = keys[1] as keyof Weights;
-  const remaining = 100 - value;
-  const otherTotal = w[a] + w[b];
-  const next: Weights = { ...w, [changed]: value };
-  if (otherTotal === 0) {
-    next[a] = Math.round(remaining / 2);
-    next[b] = remaining - next[a];
-  } else {
-    next[a] = Math.round((w[a] / otherTotal) * remaining);
-    next[b] = remaining - next[a];
-  }
-  return next;
-}
-
 export function scoreOption(
   option: ItineraryOption,
   all: ItineraryOption[],

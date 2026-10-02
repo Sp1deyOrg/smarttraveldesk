@@ -6,10 +6,8 @@ import {
   CalendarDays,
   Check,
   ChevronRight,
-  CircleHelp,
   Clock3,
   MapPin,
-  Plane,
   Plus,
   Search,
   Settings2,
@@ -33,10 +31,10 @@ import {
   timedActions,
 } from "@/lib/trip-utils";
 import { AGENTS, STAGES, type Trip } from "@/lib/types";
-import { AboutDialog, PreferencesDialog } from "./employee-dialogs";
+import { PreferencesDialog } from "./employee-dialogs";
 import { PrioritySplitSlider } from "./priority-split-slider";
 import { TripDetail } from "./trip-detail";
-import { PersonaSwitcher, SectionHeading } from "./workspace";
+import { SectionHeading, WorkspaceHeader } from "./workspace";
 
 const SAMPLE_REQUEST =
   "Client review at Infosys Mysuru campus 14–16 Oct, prefer morning flights, keep it within policy";
@@ -54,7 +52,6 @@ export function EmployeeApp() {
   const [search, setSearch] = useState("");
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
-  const [aboutOpen, setAboutOpen] = useState(false);
   const plannerRef = useRef<HTMLTextAreaElement>(null);
   const featured = currentTrip(trips);
   const selectedTrip = trips.find((trip) => trip.id === selectedTripId);
@@ -95,7 +92,6 @@ export function EmployeeApp() {
         onSearch={setSearch}
         onNewTrip={focusPlanner}
         onPreferences={() => setPreferencesOpen(true)}
-        onAbout={() => setAboutOpen(true)}
       />
 
       <main className="mx-auto max-w-[1500px] space-y-8 px-4 py-6 sm:px-6 lg:py-8">
@@ -112,7 +108,7 @@ export function EmployeeApp() {
               decisions={pending}
               onApprove={(id, tripId) => decide(id, tripId, "approved")}
               onReject={(id, tripId) => decide(id, tripId, "rejected")}
-              onAlternatives={(tripId) => setSelectedTripId(tripId)}
+              onOpenTrip={setSelectedTripId}
             />
           </aside>
         </section>
@@ -141,60 +137,32 @@ export function EmployeeApp() {
       </main>
 
       <PreferencesDialog open={preferencesOpen} onOpenChange={setPreferencesOpen} />
-      <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
       {selectedTrip ? <TripDetail trip={selectedTrip} onClose={() => setSelectedTripId(null)} /> : null}
     </div>
   );
 }
 
-function Header({
-  search,
-  onSearch,
-  onNewTrip,
-  onPreferences,
-  onAbout,
-}: {
-  search: string;
-  onSearch: (value: string) => void;
-  onNewTrip: () => void;
-  onPreferences: () => void;
-  onAbout: () => void;
-}) {
+function Header({ search, onSearch, onNewTrip, onPreferences }: { search: string; onSearch: (value: string) => void; onNewTrip: () => void; onPreferences: () => void }) {
   return (
-    <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">
-      <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
-        <div className="mr-auto flex items-center gap-2.5">
-          <div className="grid size-9 place-items-center rounded-md bg-primary text-primary-foreground">
-            <Plane className="size-5 -rotate-12" />
-          </div>
-          <div>
-            <p className="font-extrabold leading-none">TravelFlow</p>
-            <p className="mt-1 text-[10px] font-bold uppercase text-muted-foreground">Employee</p>
-          </div>
-        </div>
-        <div className="relative order-3 flex w-full items-center md:order-none md:w-[min(28vw,360px)]">
-          <Search className="pointer-events-none absolute left-3 size-4 text-muted-foreground" />
-          <Input
-            className="pl-9"
-            value={search}
-            onChange={(event) => onSearch(event.target.value)}
-            placeholder="Search trips"
-            aria-label="Search trips"
-          />
-        </div>
-        <Button variant="ghost" size="icon" onClick={onAbout} aria-label="About this prototype">
-          <CircleHelp />
-        </Button>
-        <Button className="hidden sm:inline-flex" variant="outline" onClick={onPreferences}>
-          <Settings2 />Set preferences
-        </Button>
-        <Button onClick={onNewTrip}><Plus />New trip</Button>
-        <PersonaSwitcher />
-        <Button className="order-4 w-full sm:hidden" variant="outline" onClick={onPreferences}>
-          <Settings2 />Set preferences
-        </Button>
+    <WorkspaceHeader>
+      <div className="relative order-3 flex w-full items-center md:order-none md:mr-auto md:w-[min(28vw,360px)]">
+        <Search className="pointer-events-none absolute left-3 size-4 text-muted-foreground" />
+        <Input
+          className="pl-9"
+          value={search}
+          onChange={(event) => onSearch(event.target.value)}
+          placeholder="Search trips"
+          aria-label="Search trips"
+        />
       </div>
-    </header>
+      <Button className="hidden sm:inline-flex" variant="outline" onClick={onPreferences}>
+        <Settings2 />Set preferences
+      </Button>
+      <Button onClick={onNewTrip}><Plus />New trip</Button>
+      <Button className="order-4 w-full sm:hidden" variant="outline" onClick={onPreferences}>
+        <Settings2 />Set preferences
+      </Button>
+    </WorkspaceHeader>
   );
 }
 
@@ -389,12 +357,13 @@ function ActionsNow({ trip }: { trip: Trip }) {
   );
 }
 
-function DecisionQueue({ decisions, onApprove, onReject, onAlternatives }: { decisions: ReturnType<typeof useTrips>["decisions"]; onApprove: (id: string, tripId: string) => void; onReject: (id: string, tripId: string) => void; onAlternatives: (tripId: string) => void }) {
+function DecisionQueue({ decisions, onApprove, onReject, onOpenTrip }: { decisions: ReturnType<typeof useTrips>["decisions"]; onApprove: (id: string, tripId: string) => void; onReject: (id: string, tripId: string) => void; onOpenTrip: (tripId: string) => void }) {
+  const [shown, setShown] = useState<string | null>(null);
   return (
     <section>
       <div className="mb-3 flex items-center justify-between"><h2 className="text-lg font-extrabold">Needs your decision</h2><Badge variant="secondary">{decisions.length}</Badge></div>
       <div className="space-y-3">
-        {decisions.length ? decisions.map((decision) => <article key={decision.id} className="rounded-md border bg-card p-4 shadow-sm"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold text-primary">{AGENTS[decision.agent].name}</p><h3 className="mt-1 font-bold">{decision.title}</h3></div><span className="shrink-0 text-xs font-bold text-muted-foreground">{decision.confidence}% sure</span></div><p className="mt-3 text-xs leading-5 text-muted-foreground">{decision.reasoning}</p><div className="mt-4 grid grid-cols-2 gap-2"><Button size="sm" onClick={() => onApprove(decision.id, decision.tripId)}>Approve</Button><Button size="sm" variant="outline" onClick={() => onReject(decision.id, decision.tripId)}>Reject</Button><Button className="col-span-2" size="sm" variant="ghost" onClick={() => onAlternatives(decision.tripId)}>See alternatives<ChevronRight /></Button></div></article>) : <div className="rounded-md border bg-card p-4 text-sm text-muted-foreground">You’re all caught up. Agents will surface only decisions they cannot make alone.</div>}
+        {decisions.length ? decisions.map((decision) => <article key={decision.id} className="rounded-md border bg-card p-4 shadow-sm"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold text-primary">{AGENTS[decision.agent].name}</p><h3 className="mt-1 font-bold">{decision.title}</h3></div><span className="shrink-0 text-xs font-bold text-muted-foreground">{decision.confidence}% sure</span></div><p className="mt-3 text-xs leading-5 text-muted-foreground">{decision.reasoning}</p><div className="mt-4 grid grid-cols-2 gap-2"><Button size="sm" onClick={() => onApprove(decision.id, decision.tripId)}>Approve</Button><Button size="sm" variant="outline" onClick={() => onReject(decision.id, decision.tripId)}>Reject</Button><Button className="col-span-2" size="sm" variant="ghost" onClick={() => decision.alternatives.length ? setShown(shown === decision.id ? null : decision.id) : onOpenTrip(decision.tripId)}>See alternatives<ChevronRight /></Button>{shown === decision.id && <ul className="col-span-2 space-y-1 rounded-md bg-muted/60 p-3 text-xs">{decision.alternatives.map((alternative) => <li key={alternative}>• {alternative}</li>)}<li><button type="button" className="font-semibold text-primary" onClick={() => onOpenTrip(decision.tripId)}>Open trip</button></li></ul>}</div></article>) : <div className="rounded-md border bg-card p-4 text-sm text-muted-foreground">You’re all caught up. Agents will surface only decisions they cannot make alone.</div>}
       </div>
     </section>
   );
