@@ -34,6 +34,7 @@ import {
 } from "@/lib/trip-utils";
 import { AGENTS, STAGES, type Trip } from "@/lib/types";
 import { AboutDialog, PreferencesDialog } from "./employee-dialogs";
+import { PrioritySplitSlider } from "./priority-split-slider";
 import { TripDetail } from "./trip-detail";
 import { PersonaSwitcher, SectionHeading } from "./workspace";
 
@@ -325,10 +326,15 @@ function ConfirmationCard({
         <ExtractionField label="Purpose" value={result.purpose} missing={missing("purpose")} onChange={(value) => onUpdate("purpose", value)} />
         <ExtractionField label="Meeting venue" value={result.meetingVenue} missing={missing("meetingVenue")} onChange={(value) => onUpdate("meetingVenue", value)} />
       </div>
-      <div className="mt-4 grid gap-4 sm:grid-cols-3 lg:max-w-2xl">
-        <WeightField label="Time" value={result.weightTime} onChange={(value) => onUpdate("weightTime", value)} />
-        <WeightField label="Comfort" value={result.weightComfort} onChange={(value) => onUpdate("weightComfort", value)} />
-        <WeightField label="Cost" value={result.weightCost} onChange={(value) => onUpdate("weightCost", value)} />
+      <div className="mt-5 max-w-2xl rounded-md border bg-card p-4">
+        <PrioritySplitSlider
+          value={{ time: result.weightTime, comfort: result.weightComfort, cost: result.weightCost }}
+          onChange={(weights) => {
+            onUpdate("weightTime", weights.time);
+            onUpdate("weightComfort", weights.comfort);
+            onUpdate("weightCost", weights.cost);
+          }}
+        />
       </div>
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
         <p className="text-xs text-muted-foreground">{result.notes || "No assumptions were added."}</p>
@@ -343,10 +349,6 @@ function ConfirmationCard({
 
 function ExtractionField({ label, value, missing, onChange, type = "text" }: { label: string; value: string; missing: boolean; onChange: (value: string) => void; type?: string }) {
   return <div className="space-y-1.5"><Label>{label}</Label><Input className={missing ? "border-warning ring-1 ring-warning" : ""} type={type} value={value} onChange={(event) => onChange(event.target.value)} placeholder={missing ? "Required" : undefined} />{missing ? <p className="text-[11px] font-semibold text-warning-foreground">Needs your input</p> : null}</div>;
-}
-
-function WeightField({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
-  return <div className="space-y-1.5"><Label>{label} priority (%)</Label><Input type="number" min="0" max="100" value={value} onChange={(event) => onChange(Number(event.target.value))} /></div>;
 }
 
 function CurrentTrip({ trip, onOpen }: { trip: Trip; onOpen: () => void }) {

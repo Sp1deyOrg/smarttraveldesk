@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDuration, formatINR } from "@/lib/geo";
-import { rankOptions, rebalance } from "@/lib/policy";
+import { rankOptions } from "@/lib/policy";
 import { demoAction, useTrips } from "@/lib/store";
 import type { Trip } from "@/lib/types";
+import { PrioritySplitSlider } from "./priority-split-slider";
 
 export function StagePanel({ trip }: { trip: Trip }) {
   if (trip.stage === "discovery") return <DiscoveryPanel trip={trip} />;
@@ -46,7 +46,6 @@ function PlanningPanel({ trip }: { trip: Trip }) {
   const { prefs, grades, setWeights, updateTrip, advanceStage, log, raiseException } = useTrips();
   const [compare, setCompare] = useState<string[]>([]);
   const ranked = useMemo(() => rankOptions(trip.options, trip.weights, trip.cityTier, prefs), [trip.options, trip.weights, trip.cityTier, prefs, grades]);
-  const changeWeight = (key: keyof Trip["weights"], value: number) => setWeights(trip.id, rebalance(trip.weights, key, value));
   const approve = (optionId: string, label: string) => {
     const entry = ranked.find((r) => r.option.id === optionId);
     if (entry && entry.violations.length) {
@@ -63,8 +62,8 @@ function PlanningPanel({ trip }: { trip: Trip }) {
     toast.success("Itinerary approved");
   };
   return <PanelShell eyebrow="Pre-Trip Agent" title="Ranked itinerary options">
-    <div className="grid gap-3 rounded-md bg-muted/50 p-4 sm:grid-cols-3">
-      {(["time", "comfort", "cost"] as const).map((key) => <div key={key}><div className="mb-2 flex justify-between text-xs font-semibold capitalize"><span>{key}</span><span>{trip.weights[key]}%</span></div><Slider aria-label={`${key} priority`} value={[trip.weights[key]]} max={80} step={5} onValueChange={(values) => changeWeight(key, values[0] ?? trip.weights[key])} /></div>)}
+    <div className="rounded-md bg-muted/50 p-4">
+      <PrioritySplitSlider value={trip.weights} onChange={(weights) => setWeights(trip.id, weights)} label="Option ranking priorities" />
     </div>
     <div className="mt-4 space-y-3">{ranked.map(({ option, score, violations }, index) => <div key={option.id} className="rounded-md border p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><div className="flex items-center gap-2"><span className="text-xs font-bold text-muted-foreground">#{index + 1}</span><h4 className="font-bold">{option.label}</h4>{index === 0 && <Badge>Recommended</Badge>}</div><p className="mt-1 text-sm text-muted-foreground">{option.flight} · {option.hotel}</p></div><div className="text-right"><p className="text-lg font-bold">{formatINR(option.costINR)}</p><p className="text-xs text-muted-foreground">Agent score {score}</p></div></div><div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground"><span>{formatDuration(option.doorToDoorMins)} door to door</span><span>{option.comfort}/5 comfort</span><span>{option.policyScore}% policy score</span></div>{violations.length ? <div className="mt-3 rounded-md bg-destructive/10 p-2 text-xs text-destructive">{violations.join(" · ")}</div> : <p className="mt-3 text-xs font-semibold text-success">Within policy</p>}<div className="mt-3 flex items-center justify-between"><label className="flex items-center gap-2 text-xs"><Checkbox checked={compare.includes(option.id)} onCheckedChange={(checked) => setCompare((current) => checked ? [...current.slice(0, 1), option.id] : current.filter((id) => id !== option.id))} />Compare</label><Button size="sm" onClick={() => approve(option.id, option.label)}>Approve option</Button></div></div>)}</div>
     {compare.length === 2 && <div className="mt-4 grid gap-3 rounded-md border border-primary/30 bg-accent/30 p-4 sm:grid-cols-2">{compare.map((id) => { const item = ranked.find((entry) => entry.option.id === id); return item ? <div key={id}><p className="font-bold">{item.option.label}</p><p className="mt-1 text-sm">{formatINR(item.option.costINR)} · {formatDuration(item.option.doorToDoorMins)} · {item.option.comfort}/5 comfort</p></div> : null; })}</div>}
