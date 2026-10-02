@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDuration, formatINR } from "@/lib/geo";
 import { rankOptions } from "@/lib/policy";
-import { demoAction, useTrips } from "@/lib/store";
+import { findPlace } from "@/lib/trip-utils";
+import { demoAction, modeFor, useTrips } from "@/lib/store";
 import type { Trip } from "@/lib/types";
 import { PrioritySplitSlider } from "./priority-split-slider";
 
@@ -26,7 +27,7 @@ function PanelShell({ title, eyebrow, children }: { title: string; eyebrow: stri
 }
 
 function DiscoveryPanel({ trip }: { trip: Trip }) {
-  const { advanceStage, log } = useTrips();
+  const { advanceStage, updateTrip, log } = useTrips();
   return <PanelShell eyebrow="Discovery Agent" title="Is this trip worth making?">
     <div className="grid gap-3 sm:grid-cols-2">
       <DataPoint label="Trigger" value={trip.discovery.trigger} wide />
@@ -35,15 +36,15 @@ function DiscoveryPanel({ trip }: { trip: Trip }) {
       <DataPoint label="Conflicts" value={trip.discovery.conflicts.join(" · ") || "No conflicts detected"} wide />
     </div>
     <div className="mt-4 flex flex-wrap gap-2">
-      <Button onClick={() => { advanceStage(trip.id, "planning"); log(trip.id, "discovery", "Requirements approved and handed to Pre-Trip Agent", "approval"); toast.success("Trip need approved"); }}>Review requirements</Button>
+      <Button onClick={() => { advanceStage(trip.id, "planning"); log(trip.id, "discovery", "Requirements approved and handed to Pre-Trip Agent", modeFor(trip, "discovery")); toast.success("Trip need approved"); }}>Review requirements</Button>
       <Button variant="outline" onClick={() => demoAction("Alternative trip dates")}>View alternatives</Button>
-      <Button variant="ghost" onClick={() => demoAction("Dismiss trip")}>Dismiss trip</Button>
+      <Button variant="ghost" onClick={() => { log(trip.id, "discovery", "Trip dismissed by the traveller", "approval"); updateTrip(trip.id, { lastAction: "Trip dismissed — no travel needed" }); toast("Trip dismissed"); }}>Dismiss trip</Button>
     </div>
   </PanelShell>;
 }
 
 function PlanningPanel({ trip }: { trip: Trip }) {
-  const { prefs, grades, setWeights, updateTrip, advanceStage, log, raiseException } = useTrips();
+  const { prefs, grades, setWeights, updateTrip, log, raiseException } = useTrips();
   const [compare, setCompare] = useState<string[]>([]);
   const ranked = useMemo(() => rankOptions(trip.options, trip.weights, trip.cityTier, prefs), [trip.options, trip.weights, trip.cityTier, prefs, grades]);
   const approve = (optionId: string, label: string) => {
@@ -57,8 +58,7 @@ function PlanningPanel({ trip }: { trip: Trip }) {
       return;
     }
     updateTrip(trip.id, { selectedOptionId: optionId, stage: "confirmed", activeAgent: "pretrip", lastAction: `Approved ${label} · bookings being confirmed` });
-    advanceStage(trip.id, "confirmed");
-    log(trip.id, "pretrip", `Approved itinerary option '${label}'`, "approval");
+    log(trip.id, "pretrip", `Approved itinerary option '${label}'`, modeFor(trip, "pretrip"));
     toast.success("Itinerary approved");
   };
   return <PanelShell eyebrow="Pre-Trip Agent" title="Ranked itinerary options">
@@ -71,33 +71,57 @@ function PlanningPanel({ trip }: { trip: Trip }) {
 }
 
 function ConfirmedPanel({ trip }: { trip: Trip }) {
-  return <PanelShell eyebrow="Pre-Trip Agent" title="Everything is confirmed"><div className="grid gap-3 sm:grid-cols-3">{trip.bookings.map((booking) => <DataPoint key={booking.id} label={booking.type} value={`${booking.ref} · ${booking.status}`} />)}</div><div className="mt-4 rounded-md bg-muted/50 p-4"><p className="text-sm font-semibold">Day-by-day timeline</p><div className="mt-3 space-y-3 text-sm"><TimelineItem text="06:15 · Leave for Bengaluru airport" /><TimelineItem text="08:45 · Airport pickup and hotel transfer" /><TimelineItem text="11:00 · Client meeting and working session" /><TimelineItem text="19:30 · Return transfer begins" /></div></div><div className="mt-4 flex flex-wrap gap-2"><Button onClick={() => demoAction("Add to calendar")}><CalendarPlus />Add to calendar</Button><Button variant="outline" onClick={() => demoAction("Download tickets")}><Download />Download tickets</Button></div></PanelShell>;
+  return <PanelShell eyebrow="Pre-Trip Agent" title="Everything is confirmed"><div className="grid gap-3 sm:grid-cols-3">{trip.bookings.map((booking) => <DataPoint key={booking.id} label={booking.type} value={`${booking.ref} · ${booking.status}`} />)}</div><div className="mt-4 rounded-md bg-muted/50 p-4"><p className="text-sm font-semibold">Day-by-day timeline</p><div className="mt-3 space-y-3 text-sm">{timeline(trip).map((text) => <TimelineItem key={text} text={text} />)}</div></div><div className="mt-4 flex flex-wrap gap-2"><Button onClick={() => demoAction("Add to calendar")}><CalendarPlus />Add to calendar</Button><Button variant="outline" onClick={() => demoAction("Download tickets")}><Download />Download tickets</Button></div></PanelShell>;
 }
 
 function LivePanel({ trip }: { trip: Trip }) {
   const { updateTrip, log, addDecision, addEscalation } = useTrips();
   const simulate = () => {
     if (trip.live.disrupted) { toast("Disruption already simulated"); return; }
-    updateTrip(trip.id, { live: { flight: `${trip.live.flight} · delayed 2h`, cab: "Pickup moved by 2 hours", hotel: trip.live.hotel, disrupted: true }, lastAction: "Flight delay detected · recovery plan prepared" });
-    log(trip.id, "live", "Moved cab pickup by 2 hours and drafted a note to the meeting organiser", "auto");
-    if (trip.autonomy.live === "auto") {
+    const auto = trip.autonomy.live === "auto";
+    const suggestOnly = trip.autonomy.live === "suggest";
+    updateTrip(trip.id, { live: { flight: `${trip.live.flight} · delayed 2h`, cab: suggestOnly ? trip.live.cab : "Pickup moved by 2 hours", hotel: trip.live.hotel, disrupted: true }, lastAction: "Flight delay detected · recovery plan prepared" });
+    if (!suggestOnly) log(trip.id, "live", "Moved cab pickup by 2 hours and drafted a note to the meeting organiser", "auto");
+    if (auto) {
+      updateTrip(trip.id, (t) => ({ live: { ...t.live, flight: "Rebooked onto the next departure", disrupted: false }, lastAction: "Rebooked automatically after a 2-hour delay" }));
       log(trip.id, "live", "Rebooked onto the best available flight automatically", "auto");
       toast.success("Live Agent rebooked automatically");
     } else {
-      addDecision({ tripId: trip.id, agent: "live", title: "Approve rebooking after 2-hour delay", reasoning: "The current flight now misses the first meeting. A nearby departure preserves the agenda for ₹2,140 more.", confidence: 92, alternatives: ["Keep current flight and join first meeting remotely", "Move the meeting by two hours"] });
+      addDecision({ tripId: trip.id, agent: "live", action: "rebook", title: "Approve rebooking after 2-hour delay", reasoning: "The current flight now misses the first meeting. A nearby departure preserves the agenda for ₹2,140 more.", confidence: 92, alternatives: ["Keep current flight and join first meeting remotely", "Move the meeting by two hours"] });
       addEscalation({ tripId: trip.id, kind: "sameday", title: "Same-day change: rebook after 2-hour delay", detail: `${trip.live.flight} delayed 2h. Traveller approval pending; desk to secure seats on the next departure.`, slaMins: 30 });
       toast.warning("Rebooking needs your approval");
     }
   };
-  return <PanelShell eyebrow="Live Trip Agent" title="Your trip is being monitored"><div className="grid gap-3 sm:grid-cols-3"><Status label="Flight" value={trip.live.flight} alert={trip.live.disrupted} /><Status label="Cab" value={trip.live.cab} /><Status label="Hotel" value={trip.live.hotel} /></div>{trip.live.disrupted && <div className="mt-4 rounded-md border border-warning/50 bg-warning/10 p-4"><p className="font-semibold">Recovery plan ready</p><p className="mt-1 text-sm text-muted-foreground">Rebooking proposed, organiser note drafted, and cab pickup moved automatically.</p></div>}<Button className="mt-4" variant="outline" onClick={simulate}><RefreshCw />Simulate disruption</Button></PanelShell>;
+  return <PanelShell eyebrow="Live Trip Agent" title="Your trip is being monitored"><div className="grid gap-3 sm:grid-cols-3"><Status label="Flight" value={trip.live.flight} alert={trip.live.disrupted} /><Status label="Cab" value={trip.live.cab} /><Status label="Hotel" value={trip.live.hotel} /></div>{trip.live.disrupted && <div className="mt-4 rounded-md border border-warning/50 bg-warning/10 p-4"><p className="font-semibold">Recovery plan ready</p><p className="mt-1 text-sm text-muted-foreground">{trip.autonomy.live === "suggest" ? "Rebooking proposed. Cab and organiser changes are waiting for your go-ahead." : "Rebooking proposed, organiser note drafted, and cab pickup moved automatically."}</p></div>}<Button className="mt-4" variant="outline" onClick={simulate}><RefreshCw />Simulate disruption</Button></PanelShell>;
 }
 
 function PostTripPanel({ trip }: { trip: Trip }) {
+  const { log } = useTrips();
   const spent = trip.expenses.reduce((sum, expense) => sum + expense.amountINR, 0);
   const [feedback, setFeedback] = useState(0);
-  return <PanelShell eyebrow="Post-Trip Agent" title="Close out this trip"><div className="grid gap-3 sm:grid-cols-3"><DataPoint label="Spend" value={`${formatINR(spent)} of ${formatINR(trip.budgetINR)}`} /><DataPoint label="Time saved" value="3h 40m" /><DataPoint label="Policy outcome" value="94% compliant" /></div><div className="mt-4 rounded-md bg-muted/50 p-4"><p className="font-semibold">Expense draft ready</p><p className="mt-1 text-sm text-muted-foreground">Bookings and card transactions have been matched. Two meal receipts still need review.</p><Button className="mt-3" size="sm" variant="outline" onClick={() => demoAction("Receipt upload")}><FileUp />Upload receipts</Button></div><div className="mt-4"><Label>How was the trip?</Label><div className="mt-2 flex gap-1">{[1,2,3,4,5].map((rating) => <Button key={rating} size="icon" variant="ghost" aria-label={`${rating} stars`} onClick={() => setFeedback(rating)}><Star className={rating <= feedback ? "fill-warning text-warning" : "text-muted-foreground"} /></Button>)}</div>{feedback > 0 && <Textarea className="mt-2" placeholder="Optional feedback for future recommendations" />}</div></PanelShell>;
+  const [comment, setComment] = useState("");
+  const [sent, setSent] = useState(false);
+  const chosen = trip.options.find((option) => option.id === trip.selectedOptionId);
+  const slowest = trip.options.length ? Math.max(...trip.options.map((option) => option.doorToDoorMins)) : 0;
+  const saved = chosen ? Math.max(0, slowest - chosen.doorToDoorMins) : 0;
+  const submit = () => {
+    log(trip.id, "post", `Feedback received: ${feedback}/5${comment.trim() ? ` · “${comment.trim()}”` : ""}`, modeFor(trip, "post"));
+    setSent(true);
+    toast.success("Thanks — feedback will shape future recommendations");
+  };
+  return <PanelShell eyebrow="Post-Trip Agent" title="Close out this trip"><div className="grid gap-3 sm:grid-cols-3"><DataPoint label="Spend" value={`${formatINR(spent)} of ${formatINR(trip.budgetINR)}`} /><DataPoint label="Time saved" value={chosen ? formatDuration(saved) : "—"} /><DataPoint label="Policy outcome" value={chosen ? `${chosen.policyScore}% compliant` : "—"} /></div><div className="mt-4 rounded-md bg-muted/50 p-4"><p className="font-semibold">Expense draft ready</p><p className="mt-1 text-sm text-muted-foreground">Bookings and card transactions have been matched. Two meal receipts still need review.</p><Button className="mt-3" size="sm" variant="outline" onClick={() => demoAction("Receipt upload")}><FileUp />Upload receipts</Button></div><div className="mt-4"><Label>How was the trip?</Label><div className="mt-2 flex gap-1">{[1,2,3,4,5].map((rating) => <Button key={rating} size="icon" variant="ghost" aria-label={`${rating} stars`} disabled={sent} onClick={() => setFeedback(rating)}><Star className={rating <= feedback ? "fill-warning text-warning" : "text-muted-foreground"} /></Button>)}</div>{feedback > 0 && !sent && <><Textarea className="mt-2" value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Optional feedback for future recommendations" aria-label="Trip feedback" /><Button className="mt-2" size="sm" onClick={submit}>Submit feedback</Button></>}{sent && <p className="mt-2 text-sm text-muted-foreground">Feedback submitted.</p>}</div></PanelShell>;
 }
 
 function DataPoint({ label, value, wide }: { label: string; value: string; wide?: boolean }) { return <div className={`rounded-md bg-muted/50 p-3 ${wide ? "sm:col-span-2" : ""}`}><p className="text-xs font-semibold capitalize text-muted-foreground">{label}</p><p className="mt-1 text-sm font-medium">{value}</p></div>; }
+function timeline(trip: Trip) {
+  const hotel = findPlace(trip, "hotel")?.name ?? "your hotel";
+  const meeting = findPlace(trip, "meeting")?.name ?? "the meeting venue";
+  return [
+    `06:15 · Leave for ${trip.originCity} airport`,
+    `08:45 · Arrive in ${trip.city}, transfer to ${hotel}`,
+    `11:00 · Meeting at ${meeting}`,
+    "19:30 · Return transfer begins",
+  ];
+}
 function TimelineItem({ text }: { text: string }) { return <div className="flex items-center gap-2"><Clock3 className="size-4 text-primary" /><span>{text}</span></div>; }
 function Status({ label, value, alert }: { label: string; value: string; alert?: boolean }) { return <div className="rounded-md border p-3"><div className="flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground">{alert ? <AlertTriangle className="size-4 text-warning" /> : <Check className="size-4 text-success" />}{label}</div><p className="mt-2 text-sm font-medium">{value}</p></div>; }

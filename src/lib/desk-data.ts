@@ -125,6 +125,7 @@ export const INVOICES: Invoice[] = [
 
 export interface OtherTraveller {
   id: string;
+  tripId: string;
   name: string;
   department: string;
   city: string;
@@ -135,10 +136,10 @@ export interface OtherTraveller {
 }
 
 export const OTHER_TRAVELLERS: OtherTraveller[] = [
-  { id: "t1", name: "Arjun Mehta", department: "Sales", city: "Delhi NCR", lat: 28.5562, lng: 77.1, status: "Landed at IGI T3 · cab en route", },
-  { id: "t2", name: "Kavya Iyer", department: "Engineering", city: "Chennai", lat: 12.9941, lng: 80.1709, status: "Flight AI-543 cancelled", alert: "Flight cancelled · rebooking needed on next departure" },
-  { id: "t3", name: "Rohan Das", department: "Consulting", city: "Hyderabad", lat: 17.4435, lng: 78.3772, status: "At client site, HITEC City" },
-  { id: "t4", name: "Neha Kulkarni", department: "Finance", city: "Pune", lat: 18.5793, lng: 73.9089, status: "Boarding 6E-512 to Bengaluru" },
+  { id: "t1", tripId: "TRV-2503", name: "Arjun Mehta", department: "Sales", city: "Delhi NCR", lat: 28.5562, lng: 77.1, status: "Landed at IGI T3 · cab en route", },
+  { id: "t2", tripId: "TRV-2455", name: "Kavya Iyer", department: "Engineering", city: "Chennai", lat: 12.9941, lng: 80.1709, status: "Flight AI-543 cancelled", alert: "Flight cancelled · rebooking needed on next departure" },
+  { id: "t3", tripId: "TRV-2492", name: "Rohan Das", department: "Consulting", city: "Hyderabad", lat: 17.4435, lng: 78.3772, status: "At client site, HITEC City" },
+  { id: "t4", tripId: "TRV-2510", name: "Neha Kulkarni", department: "Finance", city: "Pune", lat: 18.5793, lng: 73.9089, status: "Boarding 6E-512 to Bengaluru" },
 ];
 
 export const DEPARTMENT_SPEND: { department: string; spendINR: number; budgetINR: number }[] = [

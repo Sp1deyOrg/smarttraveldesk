@@ -135,8 +135,16 @@ export function TripProvider({ children }: { children: ReactNode }) {
         updateTrip(tripId, (t) => ({ autonomy: { ...t.autonomy, [agent]: v } })),
       setWeights: (tripId, w) => updateTrip(tripId, { weights: w }),
       addExpense: (tripId, e) => updateTrip(tripId, (t) => ({ expenses: [...t.expenses, e] })),
-      resolveDecision: (id, status) =>
-        setDecisions((prev) => prev.map((d) => (d.id === id ? { ...d, status } : d))),
+      resolveDecision: (id, status) => {
+        const d = decisions.find((x) => x.id === id);
+        setDecisions((prev) => prev.map((x) => (x.id === id ? { ...x, status } : x)));
+        if (d?.action === "rebook" && status === "approved") {
+          updateTrip(d.tripId, (t) => ({
+            live: { ...t.live, flight: "Rebooked onto the next departure", disrupted: false },
+            lastAction: "Rebooking approved · new flight confirmed",
+          }));
+        }
+      },
       addDecision,
       advanceStage: (tripId, stage) => updateTrip(tripId, { stage }),
       addEscalation: (e) =>
@@ -200,6 +208,11 @@ export function useTrips() {
 
 export function demoAction(label: string) {
   toast(`${label} is a simulated action in this prototype.`);
+}
+
+/** Activity-log mode for an agent's action, driven by its autonomy setting. */
+export function modeFor(trip: Trip, agent: AgentId): ActivityEntry["mode"] {
+  return trip.autonomy[agent] === "auto" ? "auto" : "approval";
 }
 
 export function newTripId() {

@@ -71,6 +71,8 @@ export interface Decision {
   reasoning: string;
   confidence: number; // 0-100
   alternatives: string[];
+  /** Effect applied to the trip when the traveller approves. */
+  action?: "rebook";
   createdAt: string;
   status: "pending" | "approved" | "rejected";
 }
