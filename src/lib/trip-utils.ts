@@ -11,12 +11,6 @@ export function hoursToDeparture(trip: Trip, now = Date.now()) {
   return (new Date(trip.startDate).getTime() - now) / 3_600_000;
 }
 
-export function isLiveOrImminent(trip: Trip, now = Date.now()) {
-  const h = hoursToDeparture(trip, now);
-  const ended = new Date(trip.endDate).getTime() < now;
-  return (trip.stage === "live" && !ended) || (h > 0 && h <= 24);
-}
-
 export function currentTrip(trips: Trip[], now = Date.now()) {
   return (
     trips.find((t) => t.stage === "live" && new Date(t.endDate).getTime() > now) ??
@@ -54,10 +48,6 @@ export function formatDateRange(trip: Trip) {
   const f = (iso: string) =>
     new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
   return `${f(trip.startDate)} – ${f(trip.endDate)}`;
-}
-
-export function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
 }
 
 export interface TimedAction {
