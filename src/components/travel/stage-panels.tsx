@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDuration, formatINR } from "@/lib/geo";
-import { rankOptions, rebalance } from "@/lib/policy";
+import { rankOptions } from "@/lib/policy";
 import { demoAction, useTrips } from "@/lib/store";
 import type { Trip } from "@/lib/types";
 import { PrioritySplitSlider } from "./priority-split-slider";
