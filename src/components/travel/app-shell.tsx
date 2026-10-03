@@ -10,4 +10,3 @@ export function AppRoot() {
   if (persona === "manager") return <ManagerApp />;
   return <EmployeeApp />;
 }
-

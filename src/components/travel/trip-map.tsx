@@ -22,14 +22,36 @@ function FitPlaces({ places }: { places: Place[] }) {
 
 export default function TripMap({ places }: { places: Place[] }) {
   const first = places[0];
-  if (!first) return <div className="grid h-full place-items-center bg-muted text-sm text-muted-foreground">No locations yet</div>;
+  if (!first)
+    return (
+      <div className="grid h-full place-items-center bg-muted text-sm text-muted-foreground">
+        No locations yet
+      </div>
+    );
 
   return (
-    <MapContainer center={[first.lat, first.lng]} zoom={11} scrollWheelZoom={false} className="h-full w-full" aria-label="Trip locations map">
-      <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+    <MapContainer
+      center={[first.lat, first.lng]}
+      zoom={11}
+      scrollWheelZoom={false}
+      className="h-full w-full"
+      aria-label="Trip locations map"
+    >
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
       {places.map((place) => (
         <Marker key={place.id} position={[place.lat, place.lng]} icon={markerIcon}>
-          <Popup><strong>{place.name}</strong>{place.detail ? <><br />{place.detail}</> : null}</Popup>
+          <Popup>
+            <strong>{place.name}</strong>
+            {place.detail ? (
+              <>
+                <br />
+                {place.detail}
+              </>
+            ) : null}
+          </Popup>
         </Marker>
       ))}
       <FitPlaces places={places} />

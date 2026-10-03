@@ -25,21 +25,36 @@ export function ManagerApp() {
         <section>
           <SectionHeading eyebrow="Approvals inbox" title="Policy exceptions" />
           {pending.length ? (
-            <div className="grid gap-4 lg:grid-cols-2">{pending.map((x) => <ExceptionCard key={x.id} x={x} />)}</div>
+            <div className="grid gap-4 lg:grid-cols-2">
+              {pending.map((x) => (
+                <ExceptionCard key={x.id} x={x} />
+              ))}
+            </div>
           ) : (
-            <div className="rounded-md border border-dashed bg-card px-4 py-10 text-center text-sm text-muted-foreground">No exceptions waiting. Agents route only policy breaches here.</div>
+            <div className="rounded-md border border-dashed bg-card px-4 py-10 text-center text-sm text-muted-foreground">
+              No exceptions waiting. Agents route only policy breaches here.
+            </div>
           )}
         </section>
         {decided.length > 0 && (
           <section>
             <SectionHeading eyebrow="History" title="Decided exceptions" />
-            <div className="space-y-2">{decided.map((x) => (
-              <div key={x.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-card p-3 text-sm">
-                <span><strong>{x.tripId}</strong> · {x.title}</span>
-                <span className="text-muted-foreground">{x.comment}</span>
-                <Badge variant={x.status === "approved" ? "default" : "destructive"}>{x.status}</Badge>
-              </div>
-            ))}</div>
+            <div className="space-y-2">
+              {decided.map((x) => (
+                <div
+                  key={x.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-card p-3 text-sm"
+                >
+                  <span>
+                    <strong>{x.tripId}</strong> · {x.title}
+                  </span>
+                  <span className="text-muted-foreground">{x.comment}</span>
+                  <Badge variant={x.status === "approved" ? "default" : "destructive"}>
+                    {x.status}
+                  </Badge>
+                </div>
+              ))}
+            </div>
           </section>
         )}
       </main>
@@ -58,19 +73,50 @@ function ExceptionCard({ x }: { x: PolicyException }) {
   };
   return (
     <article className="rounded-md border bg-card p-5 shadow-sm">
-      <p className="text-xs font-bold text-primary">Riya Sharma · {x.tripId} · {trip?.city}</p>
-      <div className="mt-1 flex flex-wrap items-center justify-between gap-2"><h3 className="font-bold">{x.title}</h3><Badge variant={x.agentRecommends === "approve" ? "default" : "outline"}>Agent: {x.agentRecommends}</Badge></div>
-      <p className="mt-3 text-sm"><span className="font-semibold">Justification: </span>{x.justification}</p>
-      <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
-        <div className="rounded-md bg-muted/50 p-2"><p className="text-xs text-muted-foreground">Policy</p>{formatINR(x.policyCostINR)}</div>
-        <div className="rounded-md bg-muted/50 p-2"><p className="text-xs text-muted-foreground">Requested</p>{formatINR(x.requestedCostINR)}</div>
-        <div className="rounded-md bg-destructive/10 p-2 text-destructive"><p className="text-xs">Difference</p>+{formatINR(diff)}</div>
+      <p className="text-xs font-bold text-primary">
+        Riya Sharma · {x.tripId} · {trip?.city}
+      </p>
+      <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+        <h3 className="font-bold">{x.title}</h3>
+        <Badge variant={x.agentRecommends === "approve" ? "default" : "outline"}>
+          Agent: {x.agentRecommends}
+        </Badge>
       </div>
-      <p className="mt-3 rounded-md bg-accent/40 p-3 text-sm"><span className="font-semibold">Agent recommends: </span>{x.recommendation}</p>
-      <Textarea className="mt-3" value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Comment (required)" aria-label="Manager comment" />
+      <p className="mt-3 text-sm">
+        <span className="font-semibold">Justification: </span>
+        {x.justification}
+      </p>
+      <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
+        <div className="rounded-md bg-muted/50 p-2">
+          <p className="text-xs text-muted-foreground">Policy</p>
+          {formatINR(x.policyCostINR)}
+        </div>
+        <div className="rounded-md bg-muted/50 p-2">
+          <p className="text-xs text-muted-foreground">Requested</p>
+          {formatINR(x.requestedCostINR)}
+        </div>
+        <div className="rounded-md bg-destructive/10 p-2 text-destructive">
+          <p className="text-xs">Difference</p>+{formatINR(diff)}
+        </div>
+      </div>
+      <p className="mt-3 rounded-md bg-accent/40 p-3 text-sm">
+        <span className="font-semibold">Agent recommends: </span>
+        {x.recommendation}
+      </p>
+      <Textarea
+        className="mt-3"
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        placeholder="Comment (required)"
+        aria-label="Manager comment"
+      />
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <Button disabled={!comment.trim()} onClick={() => decide("approved")}>Approve</Button>
-        <Button disabled={!comment.trim()} variant="outline" onClick={() => decide("rejected")}>Reject</Button>
+        <Button disabled={!comment.trim()} onClick={() => decide("approved")}>
+          Approve
+        </Button>
+        <Button disabled={!comment.trim()} variant="outline" onClick={() => decide("rejected")}>
+          Reject
+        </Button>
       </div>
     </article>
   );

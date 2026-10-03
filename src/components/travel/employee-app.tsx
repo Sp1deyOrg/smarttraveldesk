@@ -24,12 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { extractTrip, type TripExtraction } from "@/lib/extract-trip.functions";
 import { ruleParse } from "@/lib/rule-parser";
 import { newTripId, useTrips } from "@/lib/store";
-import {
-  currentTrip,
-  formatDateRange,
-  stageProgress,
-  timedActions,
-} from "@/lib/trip-utils";
+import { currentTrip, formatDateRange, stageProgress, timedActions } from "@/lib/trip-utils";
 import { AGENTS, STAGES, type Trip } from "@/lib/types";
 import { PreferencesDialog } from "./employee-dialogs";
 import { PrioritySplitSlider } from "./priority-split-slider";
@@ -83,7 +78,11 @@ export function EmployeeApp() {
   };
 
   if (!featured) {
-    return <div className="grid min-h-screen place-items-center text-muted-foreground">No trips available.</div>;
+    return (
+      <div className="grid min-h-screen place-items-center text-muted-foreground">
+        No trips available.
+      </div>
+    );
   }
 
   return (
@@ -116,7 +115,10 @@ export function EmployeeApp() {
 
         <section>
           <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-            <SectionHeading eyebrow="Your travel" title={query ? "Matching trips" : "Other trips"} />
+            <SectionHeading
+              eyebrow="Your travel"
+              title={query ? "Matching trips" : "Other trips"}
+            />
             <p className="text-sm text-muted-foreground">
               {otherTrips.length} {otherTrips.length === 1 ? "trip" : "trips"}
             </p>
@@ -131,19 +133,33 @@ export function EmployeeApp() {
             <div className="rounded-md border border-dashed bg-card py-12 text-center">
               <Search className="mx-auto size-5 text-muted-foreground" />
               <p className="mt-3 font-semibold">No trips match “{search}”</p>
-              <Button className="mt-3" variant="outline" onClick={() => setSearch("")}>Clear search</Button>
+              <Button className="mt-3" variant="outline" onClick={() => setSearch("")}>
+                Clear search
+              </Button>
             </div>
           )}
         </section>
       </main>
 
       <PreferencesDialog open={preferencesOpen} onOpenChange={setPreferencesOpen} />
-      {selectedTrip ? <TripDetail trip={selectedTrip} onClose={() => setSelectedTripId(null)} /> : null}
+      {selectedTrip ? (
+        <TripDetail trip={selectedTrip} onClose={() => setSelectedTripId(null)} />
+      ) : null}
     </div>
   );
 }
 
-function Header({ search, onSearch, onNewTrip, onPreferences }: { search: string; onSearch: (value: string) => void; onNewTrip: () => void; onPreferences: () => void }) {
+function Header({
+  search,
+  onSearch,
+  onNewTrip,
+  onPreferences,
+}: {
+  search: string;
+  onSearch: (value: string) => void;
+  onNewTrip: () => void;
+  onPreferences: () => void;
+}) {
   return (
     <WorkspaceHeader>
       <div className="relative order-3 flex w-full items-center md:order-none md:mr-auto md:w-[min(28vw,360px)]">
@@ -157,11 +173,16 @@ function Header({ search, onSearch, onNewTrip, onPreferences }: { search: string
         />
       </div>
       <Button className="hidden sm:inline-flex" variant="outline" onClick={onPreferences}>
-        <Settings2 />Set preferences
+        <Settings2 />
+        Set preferences
       </Button>
-      <Button onClick={onNewTrip}><Plus />New trip</Button>
+      <Button onClick={onNewTrip}>
+        <Plus />
+        New trip
+      </Button>
       <Button className="order-4 w-full sm:hidden" variant="outline" onClick={onPreferences}>
-        <Settings2 />Set preferences
+        <Settings2 />
+        Set preferences
       </Button>
     </WorkspaceHeader>
   );
@@ -206,7 +227,13 @@ function TripPlanner({
 
   const create = () => {
     if (!result) return;
-    const required = ["destinationCity", "startDate", "endDate", "purpose", "meetingVenue"] as const;
+    const required = [
+      "destinationCity",
+      "startDate",
+      "endDate",
+      "purpose",
+      "meetingVenue",
+    ] as const;
     const missing = required.filter((field) => !String(result[field]).trim());
     if (missing.length) {
       toast.error(`Complete ${missing.map((field) => fieldLabels[field]).join(", ")}`);
@@ -235,7 +262,9 @@ function TripPlanner({
             <p className="text-xs font-extrabold uppercase">Discovery Agent</p>
           </div>
           <h1 className="mt-2 text-2xl font-extrabold sm:text-3xl">Where do you need to be?</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Describe the business trip. The agent will structure it before anything is created.</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Describe the business trip. The agent will structure it before anything is created.
+          </p>
           <Textarea
             ref={inputRef}
             className="mt-5 min-h-24 resize-none text-base"
@@ -246,7 +275,17 @@ function TripPlanner({
           />
         </div>
         <Button className="h-11 lg:min-w-36" onClick={analyse} disabled={loading}>
-          {loading ? <><Bot className="animate-pulse" />Extracting…</> : <>Plan trip<ArrowRight /></>}
+          {loading ? (
+            <>
+              <Bot className="animate-pulse" />
+              Extracting…
+            </>
+          ) : (
+            <>
+              Plan trip
+              <ArrowRight />
+            </>
+          )}
         </Button>
       </div>
       {result ? (
@@ -282,22 +321,59 @@ function ConfirmationCard({
         <div>
           <div className="flex items-center gap-2">
             <h2 className="font-bold">Confirm the trip brief</h2>
-            <Badge variant={source === "ai" ? "default" : "outline"}>{source === "ai" ? "AI extracted" : "Rules fallback"}</Badge>
+            <Badge variant={source === "ai" ? "default" : "outline"}>
+              {source === "ai" ? "AI extracted" : "Rules fallback"}
+            </Badge>
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">Review every field before the Discovery Agent starts.</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Review every field before the Discovery Agent starts.
+          </p>
         </div>
-        <Button size="icon" variant="ghost" onClick={onCancel} aria-label="Cancel trip brief"><X /></Button>
+        <Button size="icon" variant="ghost" onClick={onCancel} aria-label="Cancel trip brief">
+          <X />
+        </Button>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <ExtractionField label="Destination" value={result.destinationCity} missing={missing("destinationCity")} onChange={(value) => onUpdate("destinationCity", value)} />
-        <ExtractionField label="Start date" type="date" value={result.startDate.slice(0, 10)} missing={missing("startDate")} onChange={(value) => onUpdate("startDate", value)} />
-        <ExtractionField label="End date" type="date" value={result.endDate.slice(0, 10)} missing={missing("endDate")} onChange={(value) => onUpdate("endDate", value)} />
-        <ExtractionField label="Purpose" value={result.purpose} missing={missing("purpose")} onChange={(value) => onUpdate("purpose", value)} />
-        <ExtractionField label="Meeting venue" value={result.meetingVenue} missing={missing("meetingVenue")} onChange={(value) => onUpdate("meetingVenue", value)} />
+        <ExtractionField
+          label="Destination"
+          value={result.destinationCity}
+          missing={missing("destinationCity")}
+          onChange={(value) => onUpdate("destinationCity", value)}
+        />
+        <ExtractionField
+          label="Start date"
+          type="date"
+          value={result.startDate.slice(0, 10)}
+          missing={missing("startDate")}
+          onChange={(value) => onUpdate("startDate", value)}
+        />
+        <ExtractionField
+          label="End date"
+          type="date"
+          value={result.endDate.slice(0, 10)}
+          missing={missing("endDate")}
+          onChange={(value) => onUpdate("endDate", value)}
+        />
+        <ExtractionField
+          label="Purpose"
+          value={result.purpose}
+          missing={missing("purpose")}
+          onChange={(value) => onUpdate("purpose", value)}
+        />
+        <ExtractionField
+          label="Meeting venue"
+          value={result.meetingVenue}
+          missing={missing("meetingVenue")}
+          onChange={(value) => onUpdate("meetingVenue", value)}
+        />
       </div>
       <div className="mt-5 max-w-2xl rounded-md border bg-card p-4">
         <PrioritySplitSlider
-          value={{ time: result.weightTime, comfort: result.weightComfort, cost: result.weightCost }}
+          value={{
+            time: result.weightTime,
+            comfort: result.weightComfort,
+            cost: result.weightCost,
+          }}
           onChange={(weights) => {
             onUpdate("weightTime", weights.time);
             onUpdate("weightComfort", weights.comfort);
@@ -306,18 +382,51 @@ function ConfirmationCard({
         />
       </div>
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
-        <p className="text-xs text-muted-foreground">{result.notes || "No assumptions were added."}</p>
+        <p className="text-xs text-muted-foreground">
+          {result.notes || "No assumptions were added."}
+        </p>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button onClick={onConfirm}><Check />Create in Discovery</Button>
+          <Button variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button onClick={onConfirm}>
+            <Check />
+            Create in Discovery
+          </Button>
         </div>
       </div>
     </div>
   );
 }
 
-function ExtractionField({ label, value, missing, onChange, type = "text" }: { label: string; value: string; missing: boolean; onChange: (value: string) => void; type?: string }) {
-  return <div className="space-y-1.5"><Label>{label}</Label><Input className={missing ? "border-warning ring-1 ring-warning" : ""} type={type} value={value} onChange={(event) => onChange(event.target.value)} placeholder={missing ? "Required" : undefined} />{missing ? <p className="text-[11px] font-semibold text-warning-foreground">Needs your input</p> : null}</div>;
+function ExtractionField({
+  label,
+  value,
+  missing,
+  onChange,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  missing: boolean;
+  onChange: (value: string) => void;
+  type?: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label>{label}</Label>
+      <Input
+        className={missing ? "border-warning ring-1 ring-warning" : ""}
+        type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={missing ? "Required" : undefined}
+      />
+      {missing ? (
+        <p className="text-[11px] font-semibold text-warning-foreground">Needs your input</p>
+      ) : null}
+    </div>
+  );
 }
 
 function CurrentTrip({ trip, onOpen }: { trip: Trip; onOpen: () => void }) {
@@ -326,21 +435,64 @@ function CurrentTrip({ trip, onOpen }: { trip: Trip; onOpen: () => void }) {
     <article className="relative overflow-hidden rounded-md border bg-card p-5 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2"><Badge>{activeStage?.label}</Badge><span className="text-xs font-bold text-muted-foreground">{trip.id}</span></div>
-          <h2 className="mt-4 text-2xl font-extrabold sm:text-3xl"><button type="button" onClick={onOpen} className="rounded-sm text-left hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{trip.title}</button></h2>
-          <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground"><span className="flex items-center gap-1"><MapPin className="size-4" />{trip.originCity} → {trip.city}</span><span className="flex items-center gap-1"><CalendarDays className="size-4" />{formatDateRange(trip)}</span></p>
+          <div className="flex items-center gap-2">
+            <Badge>{activeStage?.label}</Badge>
+            <span className="text-xs font-bold text-muted-foreground">{trip.id}</span>
+          </div>
+          <h2 className="mt-4 text-2xl font-extrabold sm:text-3xl">
+            <button
+              type="button"
+              onClick={onOpen}
+              className="rounded-sm text-left hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {trip.title}
+            </button>
+          </h2>
+          <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <MapPin className="size-4" />
+              {trip.originCity} → {trip.city}
+            </span>
+            <span className="flex items-center gap-1">
+              <CalendarDays className="size-4" />
+              {formatDateRange(trip)}
+            </span>
+          </p>
         </div>
-        <Button onClick={onOpen}>Open trip<ChevronRight /></Button>
+        <Button onClick={onOpen}>
+          Open trip
+          <ChevronRight />
+        </Button>
       </div>
       <div className="mt-8 grid grid-cols-5 gap-1">
         {STAGES.map((stage, index) => {
           const activeIndex = STAGES.findIndex((item) => item.id === trip.stage);
-          return <div key={stage.id}><div className={`h-1.5 rounded-full ${index <= activeIndex ? "bg-primary" : "bg-muted"}`} /><p className={`mt-2 truncate text-[10px] font-bold sm:text-xs ${index === activeIndex ? "text-primary" : "text-muted-foreground"}`}>{stage.label}</p></div>;
+          return (
+            <div key={stage.id}>
+              <div
+                className={`h-1.5 rounded-full ${index <= activeIndex ? "bg-primary" : "bg-muted"}`}
+              />
+              <p
+                className={`mt-2 truncate text-[10px] font-bold sm:text-xs ${index === activeIndex ? "text-primary" : "text-muted-foreground"}`}
+              >
+                {stage.label}
+              </p>
+            </div>
+          );
         })}
       </div>
       <div className="mt-7 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-md bg-accent/60 p-4"><p className="text-xs font-bold uppercase text-muted-foreground">Active now</p><p className="mt-2 flex items-center gap-2 font-bold"><Bot className="size-4 text-primary" />{AGENTS[trip.activeAgent].name}</p></div>
-        <div className="rounded-md bg-muted p-4"><p className="text-xs font-bold uppercase text-muted-foreground">Latest action</p><p className="mt-2 text-sm font-semibold">{trip.lastAction}</p></div>
+        <div className="rounded-md bg-accent/60 p-4">
+          <p className="text-xs font-bold uppercase text-muted-foreground">Active now</p>
+          <p className="mt-2 flex items-center gap-2 font-bold">
+            <Bot className="size-4 text-primary" />
+            {AGENTS[trip.activeAgent].name}
+          </p>
+        </div>
+        <div className="rounded-md bg-muted p-4">
+          <p className="text-xs font-bold uppercase text-muted-foreground">Latest action</p>
+          <p className="mt-2 text-sm font-semibold">{trip.lastAction}</p>
+        </div>
       </div>
     </article>
   );
@@ -352,19 +504,111 @@ function ActionsNow({ trip }: { trip: Trip }) {
     <section>
       <SectionHeading eyebrow="Time sensitive" title="Actions now" />
       <div className="space-y-3">
-        {actions.length ? actions.map((action) => <div key={action.id} className="rounded-md border bg-card p-4 shadow-sm"><div className="flex gap-3"><div className="grid size-8 shrink-0 place-items-center rounded-md bg-accent text-accent-foreground"><Clock3 className="size-4" /></div><div className="min-w-0 flex-1"><p className="text-sm font-bold">{action.title}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{action.detail}</p><QuickActionButton trip={trip} action={action} /></div></div></div>) : <div className="rounded-md border bg-card p-4 text-sm text-muted-foreground">The active agent has no time-sensitive actions for you.</div>}
+        {actions.length ? (
+          actions.map((action) => (
+            <div key={action.id} className="rounded-md border bg-card p-4 shadow-sm">
+              <div className="flex gap-3">
+                <div className="grid size-8 shrink-0 place-items-center rounded-md bg-accent text-accent-foreground">
+                  <Clock3 className="size-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold">{action.title}</p>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">{action.detail}</p>
+                  <QuickActionButton trip={trip} action={action} />
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="rounded-md border bg-card p-4 text-sm text-muted-foreground">
+            The active agent has no time-sensitive actions for you.
+          </div>
+        )}
       </div>
     </section>
   );
 }
 
-function DecisionQueue({ decisions, onApprove, onReject, onOpenTrip }: { decisions: ReturnType<typeof useTrips>["decisions"]; onApprove: (id: string, tripId: string) => void; onReject: (id: string, tripId: string) => void; onOpenTrip: (tripId: string) => void }) {
+function DecisionQueue({
+  decisions,
+  onApprove,
+  onReject,
+  onOpenTrip,
+}: {
+  decisions: ReturnType<typeof useTrips>["decisions"];
+  onApprove: (id: string, tripId: string) => void;
+  onReject: (id: string, tripId: string) => void;
+  onOpenTrip: (tripId: string) => void;
+}) {
   const [shown, setShown] = useState<string | null>(null);
   return (
     <section>
-      <div className="mb-3 flex items-center justify-between"><h2 className="text-lg font-extrabold">Needs your decision</h2><Badge variant="secondary">{decisions.length}</Badge></div>
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-lg font-extrabold">Needs your decision</h2>
+        <Badge variant="secondary">{decisions.length}</Badge>
+      </div>
       <div className="space-y-3">
-        {decisions.length ? decisions.map((decision) => <article key={decision.id} className="rounded-md border bg-card p-4 shadow-sm"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold text-primary">{AGENTS[decision.agent].name}</p><h3 className="mt-1 font-bold">{decision.title}</h3></div><span className="shrink-0 text-xs font-bold text-muted-foreground">{decision.confidence}% sure</span></div><p className="mt-3 text-xs leading-5 text-muted-foreground">{decision.reasoning}</p><div className="mt-4 grid grid-cols-2 gap-2"><Button size="sm" onClick={() => onApprove(decision.id, decision.tripId)}>Approve</Button><Button size="sm" variant="outline" onClick={() => onReject(decision.id, decision.tripId)}>Reject</Button><Button className="col-span-2" size="sm" variant="ghost" onClick={() => decision.alternatives.length ? setShown(shown === decision.id ? null : decision.id) : onOpenTrip(decision.tripId)}>See alternatives<ChevronRight /></Button>{shown === decision.id && <ul className="col-span-2 space-y-1 rounded-md bg-muted/60 p-3 text-xs">{decision.alternatives.map((alternative) => <li key={alternative}>• {alternative}</li>)}<li><button type="button" className="font-semibold text-primary" onClick={() => onOpenTrip(decision.tripId)}>Open trip</button></li></ul>}</div></article>) : <div className="rounded-md border bg-card p-4 text-sm text-muted-foreground">You’re all caught up. Agents will surface only decisions they cannot make alone.</div>}
+        {decisions.length ? (
+          decisions.map((decision) => (
+            <article key={decision.id} className="rounded-md border bg-card p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold text-primary">{AGENTS[decision.agent].name}</p>
+                  <h3 className="mt-1 font-bold">{decision.title}</h3>
+                </div>
+                <span className="shrink-0 text-xs font-bold text-muted-foreground">
+                  {decision.confidence}% sure
+                </span>
+              </div>
+              <p className="mt-3 text-xs leading-5 text-muted-foreground">{decision.reasoning}</p>
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <Button size="sm" onClick={() => onApprove(decision.id, decision.tripId)}>
+                  Approve
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onReject(decision.id, decision.tripId)}
+                >
+                  Reject
+                </Button>
+                <Button
+                  className="col-span-2"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() =>
+                    decision.alternatives.length
+                      ? setShown(shown === decision.id ? null : decision.id)
+                      : onOpenTrip(decision.tripId)
+                  }
+                >
+                  See alternatives
+                  <ChevronRight />
+                </Button>
+                {shown === decision.id && (
+                  <ul className="col-span-2 space-y-1 rounded-md bg-muted/60 p-3 text-xs">
+                    {decision.alternatives.map((alternative) => (
+                      <li key={alternative}>• {alternative}</li>
+                    ))}
+                    <li>
+                      <button
+                        type="button"
+                        className="font-semibold text-primary"
+                        onClick={() => onOpenTrip(decision.tripId)}
+                      >
+                        Open trip
+                      </button>
+                    </li>
+                  </ul>
+                )}
+              </div>
+            </article>
+          ))
+        ) : (
+          <div className="rounded-md border bg-card p-4 text-sm text-muted-foreground">
+            You’re all caught up. Agents will surface only decisions they cannot make alone.
+          </div>
+        )}
       </div>
     </section>
   );
@@ -372,13 +616,55 @@ function DecisionQueue({ decisions, onApprove, onReject, onOpenTrip }: { decisio
 
 function TripCard({ trip, onOpen }: { trip: Trip; onOpen: () => void }) {
   const label = STAGES.find((stage) => stage.id === trip.stage)?.label ?? trip.stage;
-  return <article className="group flex min-h-64 flex-col rounded-md border bg-card p-5 shadow-sm transition-shadow hover:shadow-md"><div className="flex items-center justify-between gap-3"><Badge variant="outline">{label}</Badge><span className="text-xs font-bold text-muted-foreground">{trip.id}</span></div><h3 className="mt-5 text-lg font-extrabold"><button type="button" onClick={onOpen} className="rounded-sm text-left hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{trip.title}</button></h3><p className="mt-2 flex items-center gap-1 text-sm text-muted-foreground"><MapPin className="size-4" />{trip.city} · {formatDateRange(trip)}</p><div className="mt-5 flex-1 rounded-md bg-muted p-3"><p className="text-[10px] font-bold uppercase text-muted-foreground">Last agent action</p><p className="mt-1 text-sm font-medium leading-5">{trip.lastAction}</p></div><div className="mt-4 flex items-center gap-3"><Progress value={stageProgress(trip.stage)} aria-label={`${label} progress`} /><span className="text-xs font-bold text-muted-foreground">{Math.round(stageProgress(trip.stage))}%</span></div><Button className="mt-4 w-full" variant="outline" onClick={onOpen}>View trip<ChevronRight /></Button></article>;
+  return (
+    <article className="group flex min-h-64 flex-col rounded-md border bg-card p-5 shadow-sm transition-shadow hover:shadow-md">
+      <div className="flex items-center justify-between gap-3">
+        <Badge variant="outline">{label}</Badge>
+        <span className="text-xs font-bold text-muted-foreground">{trip.id}</span>
+      </div>
+      <h3 className="mt-5 text-lg font-extrabold">
+        <button
+          type="button"
+          onClick={onOpen}
+          className="rounded-sm text-left hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {trip.title}
+        </button>
+      </h3>
+      <p className="mt-2 flex items-center gap-1 text-sm text-muted-foreground">
+        <MapPin className="size-4" />
+        {trip.city} · {formatDateRange(trip)}
+      </p>
+      <div className="mt-5 flex-1 rounded-md bg-muted p-3">
+        <p className="text-[10px] font-bold uppercase text-muted-foreground">Last agent action</p>
+        <p className="mt-1 text-sm font-medium leading-5">{trip.lastAction}</p>
+      </div>
+      <div className="mt-4 flex items-center gap-3">
+        <Progress value={stageProgress(trip.stage)} aria-label={`${label} progress`} />
+        <span className="text-xs font-bold text-muted-foreground">
+          {Math.round(stageProgress(trip.stage))}%
+        </span>
+      </div>
+      <Button className="mt-4 w-full" variant="outline" onClick={onOpen}>
+        View trip
+        <ChevronRight />
+      </Button>
+    </article>
+  );
 }
-
 
 function makeDiscoveryTrip(id: string, result: TripExtraction, source: "ai" | "rules"): Trip {
   const city = result.destinationCity.trim();
-  const isMetro = ["Mumbai", "Bengaluru", "Bangalore", "Hyderabad", "Delhi", "Delhi NCR", "Chennai", "Kolkata"].some((name) => city.toLowerCase().includes(name.toLowerCase()));
+  const isMetro = [
+    "Mumbai",
+    "Bengaluru",
+    "Bangalore",
+    "Hyderabad",
+    "Delhi",
+    "Delhi NCR",
+    "Chennai",
+    "Kolkata",
+  ].some((name) => city.toLowerCase().includes(name.toLowerCase()));
   const start = new Date(`${result.startDate.slice(0, 10)}T08:00:00`).toISOString();
   const end = new Date(`${result.endDate.slice(0, 10)}T20:00:00`).toISOString();
   return {
@@ -395,21 +681,71 @@ function makeDiscoveryTrip(id: string, result: TripExtraction, source: "ai" | "r
     lastAction: "Reviewing business need, calendar conflicts and policy fit",
     weights: { time: result.weightTime, comfort: result.weightComfort, cost: result.weightCost },
     places: [
-      { id: "meeting", kind: "meeting", name: result.meetingVenue.trim(), lat: 12.2958, lng: 76.6394, detail: city },
+      {
+        id: "meeting",
+        kind: "meeting",
+        name: result.meetingVenue.trim(),
+        lat: 12.2958,
+        lng: 76.6394,
+        detail: city,
+      },
       { id: "hotel", kind: "hotel", name: "Hotel to be selected", lat: 12.3044, lng: 76.6552 },
-      { id: "airport", kind: "airport", name: "Arrival point to be confirmed", lat: 12.2308, lng: 76.6558 },
+      {
+        id: "airport",
+        kind: "airport",
+        name: "Arrival point to be confirmed",
+        lat: 12.2308,
+        lng: 76.6558,
+      },
     ],
     bookings: [
-      { id: "b-flight", type: "flight", title: "Agent researching", detail: "3–5 policy-compliant options will appear in Planning", ref: "Not held", status: "Pending", alternatives: [] },
-      { id: "b-hotel", type: "hotel", title: "Agent researching", detail: `Target cap ₹${isMetro ? "8,000" : "6,000"} per night`, ref: "Not held", status: "Pending", alternatives: [] },
-      { id: "b-cab", type: "cab", title: "Sedan required", detail: "Pickup will be aligned to the final itinerary", ref: "Not held", status: "Pending", alternatives: [] },
+      {
+        id: "b-flight",
+        type: "flight",
+        title: "Agent researching",
+        detail: "3–5 policy-compliant options will appear in Planning",
+        ref: "Not held",
+        status: "Pending",
+        alternatives: [],
+      },
+      {
+        id: "b-hotel",
+        type: "hotel",
+        title: "Agent researching",
+        detail: `Target cap ₹${isMetro ? "8,000" : "6,000"} per night`,
+        ref: "Not held",
+        status: "Pending",
+        alternatives: [],
+      },
+      {
+        id: "b-cab",
+        type: "cab",
+        title: "Sedan required",
+        detail: "Pickup will be aligned to the final itinerary",
+        ref: "Not held",
+        status: "Pending",
+        alternatives: [],
+      },
     ],
     options: [],
     budgetINR: 35000,
     expenses: [],
-    activity: [{ id: `a-${Date.now()}`, at: new Date().toISOString(), agent: "discovery", text: "Created the trip brief and started discovery", mode: "approval" }],
+    activity: [
+      {
+        id: `a-${Date.now()}`,
+        at: new Date().toISOString(),
+        agent: "discovery",
+        text: "Created the trip brief and started discovery",
+        mode: "approval",
+      },
+    ],
     autonomy: { discovery: "approve", pretrip: "approve", live: "approve", post: "auto" },
-    discovery: { trigger: "Employee travel request", businessValue: 0, conflicts: ["Calendar and CRM checks in progress"], policyFit: "Assessment in progress" },
+    discovery: {
+      trigger: "Employee travel request",
+      businessValue: 0,
+      conflicts: ["Calendar and CRM checks in progress"],
+      policyFit: "Assessment in progress",
+    },
     live: { flight: "Not booked", cab: "Not booked", hotel: "Not booked", disrupted: false },
     extractedBy: source,
   };

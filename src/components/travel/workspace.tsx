@@ -1,7 +1,13 @@
 import { useState, type ReactNode } from "react";
 import { CircleHelp, Plane } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useTrips } from "@/lib/store";
 import type { Persona } from "@/lib/types";
 import { AboutDialog } from "./employee-dialogs";
@@ -21,7 +27,9 @@ export function PersonaSwitcher() {
       </SelectTrigger>
       <SelectContent>
         {(Object.keys(PERSONAS) as Persona[]).map((p) => (
-          <SelectItem key={p} value={p}>{PERSONAS[p].label}</SelectItem>
+          <SelectItem key={p} value={p}>
+            {PERSONAS[p].label}
+          </SelectItem>
         ))}
       </SelectContent>
     </Select>
@@ -47,7 +55,12 @@ export function WorkspaceHeader({ children }: { children?: ReactNode }) {
           </div>
         </div>
         {children}
-        <Button variant="ghost" size="icon" onClick={() => setAboutOpen(true)} aria-label="About this prototype">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setAboutOpen(true)}
+          aria-label="About this prototype"
+        >
           <CircleHelp />
         </Button>
         <PersonaSwitcher />
@@ -57,7 +70,15 @@ export function WorkspaceHeader({ children }: { children?: ReactNode }) {
   );
 }
 
-export function SectionHeading({ eyebrow, title, right }: { eyebrow: string; title: string; right?: ReactNode }) {
+export function SectionHeading({
+  eyebrow,
+  title,
+  right,
+}: {
+  eyebrow: string;
+  title: string;
+  right?: ReactNode;
+}) {
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
       <div>

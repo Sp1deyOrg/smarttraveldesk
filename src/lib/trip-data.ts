@@ -142,7 +142,14 @@ export const TRIPS: Trip[] = [
     places: [
       place("p1", "airport", "Chhatrapati Shivaji Intl (BOM)", 19.0896, 72.8656, "Terminal 2"),
       place("p2", "hotel", "Trident Bandra Kurla", 19.0669, 72.8697, "₹7,800 / night"),
-      place("p3", "meeting", "Nirlon Knowledge Park, Goregaon East", 19.16, 72.8672, "Tower 4, 9th floor"),
+      place(
+        "p3",
+        "meeting",
+        "Nirlon Knowledge Park, Goregaon East",
+        19.16,
+        72.8672,
+        "Tower 4, 9th floor",
+      ),
       place("p4", "restaurant", "Mahesh Lunch Home, BKC", 19.0654, 72.8614),
       place("p5", "restaurant", "Peshawri, BKC", 19.0669, 72.869),
     ],
@@ -155,14 +162,50 @@ export const TRIPS: Trip[] = [
     selectedOptionId: "o1",
     budgetINR: 48000,
     expenses: [
-      { id: "e1", category: "Flight", description: "IndiGo 6E-204 BLR–BOM", amountINR: 6340, source: "auto" },
-      { id: "e2", category: "Hotel", description: "Trident BKC · 2 nights", amountINR: 15600, source: "auto" },
-      { id: "e3", category: "Cab", description: "Airport transfer", amountINR: 980, source: "auto" },
+      {
+        id: "e1",
+        category: "Flight",
+        description: "IndiGo 6E-204 BLR–BOM",
+        amountINR: 6340,
+        source: "auto",
+      },
+      {
+        id: "e2",
+        category: "Hotel",
+        description: "Trident BKC · 2 nights",
+        amountINR: 15600,
+        source: "auto",
+      },
+      {
+        id: "e3",
+        category: "Cab",
+        description: "Airport transfer",
+        amountINR: 980,
+        source: "auto",
+      },
     ],
     activity: [
-      { id: "a1", at: at(-2, 18, 10), agent: "pretrip", text: "Locked itinerary option 'Earliest arrival' after your approval", mode: "approval" },
-      { id: "a2", at: at(-1, 4, 5), agent: "live", text: "Completed web check-in, seat 14A held", mode: "auto" },
-      { id: "a3", at: at(0, 7, 30), agent: "live", text: "Moved cab pickup 15 minutes earlier for Western Express traffic", mode: "auto" },
+      {
+        id: "a1",
+        at: at(-2, 18, 10),
+        agent: "pretrip",
+        text: "Locked itinerary option 'Earliest arrival' after your approval",
+        mode: "approval",
+      },
+      {
+        id: "a2",
+        at: at(-1, 4, 5),
+        agent: "live",
+        text: "Completed web check-in, seat 14A held",
+        mode: "auto",
+      },
+      {
+        id: "a3",
+        at: at(0, 7, 30),
+        agent: "live",
+        text: "Moved cab pickup 15 minutes earlier for Western Express traffic",
+        mode: "auto",
+      },
     ],
     autonomy: { discovery: "approve", pretrip: "approve", live: "approve", post: "auto" },
     discovery: {
@@ -171,7 +214,12 @@ export const TRIPS: Trip[] = [
       conflicts: [],
       policyFit: "Within grade L4 policy",
     },
-    live: { flight: "6E-204 · On time · Gate 24B", cab: "Driver assigned · Suresh K · KA-01-AB-4412", hotel: "Room ready · early check-in granted", disrupted: false },
+    live: {
+      flight: "6E-204 · On time · Gate 24B",
+      cab: "Driver assigned · Suresh K · KA-01-AB-4412",
+      hotel: "Room ready · early check-in granted",
+      disrupted: false,
+    },
   },
   {
     id: "TRV-2492",
@@ -203,8 +251,20 @@ export const TRIPS: Trip[] = [
     budgetINR: 32000,
     expenses: [],
     activity: [
-      { id: "a1", at: at(-3, 11, 0), agent: "pretrip", text: "Compared 5 itineraries, recommended 'Best value'", mode: "approval" },
-      { id: "a2", at: at(-2, 9, 20), agent: "pretrip", text: "Booked flight, hotel and cab", mode: "auto" },
+      {
+        id: "a1",
+        at: at(-3, 11, 0),
+        agent: "pretrip",
+        text: "Compared 5 itineraries, recommended 'Best value'",
+        mode: "approval",
+      },
+      {
+        id: "a2",
+        at: at(-2, 9, 20),
+        agent: "pretrip",
+        text: "Booked flight, hotel and cab",
+        mode: "auto",
+      },
     ],
     autonomy: { discovery: "approve", pretrip: "approve", live: "approve", post: "auto" },
     discovery: {
@@ -245,8 +305,20 @@ export const TRIPS: Trip[] = [
     budgetINR: 55000,
     expenses: [],
     activity: [
-      { id: "a1", at: at(-1, 15, 40), agent: "discovery", text: "Confirmed business case, handed off to Pre-Trip Agent", mode: "approval" },
-      { id: "a2", at: at(-1, 15, 55), agent: "pretrip", text: "Generated 4 options against your time/comfort/cost weighting", mode: "auto" },
+      {
+        id: "a1",
+        at: at(-1, 15, 40),
+        agent: "discovery",
+        text: "Confirmed business case, handed off to Pre-Trip Agent",
+        mode: "approval",
+      },
+      {
+        id: "a2",
+        at: at(-1, 15, 55),
+        agent: "pretrip",
+        text: "Generated 4 options against your time/comfort/cost weighting",
+        mode: "auto",
+      },
     ],
     autonomy: { discovery: "approve", pretrip: "approve", live: "approve", post: "auto" },
     discovery: {
@@ -287,7 +359,13 @@ export const TRIPS: Trip[] = [
     budgetINR: 30000,
     expenses: [],
     activity: [
-      { id: "a1", at: at(0, 9, 10), agent: "discovery", text: "Matched calendar invite to CRM account, scored business value 63", mode: "auto" },
+      {
+        id: "a1",
+        at: at(0, 9, 10),
+        agent: "discovery",
+        text: "Matched calendar invite to CRM account, scored business value 63",
+        mode: "auto",
+      },
     ],
     autonomy: { discovery: "approve", pretrip: "approve", live: "approve", post: "auto" },
     discovery: {
@@ -327,14 +405,52 @@ export const TRIPS: Trip[] = [
     selectedOptionId: "o2",
     budgetINR: 52000,
     expenses: [
-      { id: "e1", category: "Flight", description: "IndiGo 6E-512 return", amountINR: 11800, source: "auto" },
-      { id: "e2", category: "Hotel", description: "Taj Coromandel · 3 nights", amountINR: 23700, source: "auto" },
-      { id: "e3", category: "Cab", description: "Local travel", amountINR: 3240, source: "auto", receiptRequired: true },
-      { id: "e4", category: "Meals", description: "Team dinner (shared)", amountINR: 4600, source: "manual", receiptRequired: true },
+      {
+        id: "e1",
+        category: "Flight",
+        description: "IndiGo 6E-512 return",
+        amountINR: 11800,
+        source: "auto",
+      },
+      {
+        id: "e2",
+        category: "Hotel",
+        description: "Taj Coromandel · 3 nights",
+        amountINR: 23700,
+        source: "auto",
+      },
+      {
+        id: "e3",
+        category: "Cab",
+        description: "Local travel",
+        amountINR: 3240,
+        source: "auto",
+        receiptRequired: true,
+      },
+      {
+        id: "e4",
+        category: "Meals",
+        description: "Team dinner (shared)",
+        amountINR: 4600,
+        source: "manual",
+        receiptRequired: true,
+      },
     ],
     activity: [
-      { id: "a1", at: at(-6, 21, 0), agent: "post", text: "Drafted expense report from bookings", mode: "auto" },
-      { id: "a2", at: at(-5, 10, 0), agent: "post", text: "Flagged 2 missing receipts", mode: "auto" },
+      {
+        id: "a1",
+        at: at(-6, 21, 0),
+        agent: "post",
+        text: "Drafted expense report from bookings",
+        mode: "auto",
+      },
+      {
+        id: "a2",
+        at: at(-5, 10, 0),
+        agent: "post",
+        text: "Flagged 2 missing receipts",
+        mode: "auto",
+      },
     ],
     autonomy: { discovery: "approve", pretrip: "approve", live: "approve", post: "auto" },
     discovery: {
@@ -361,7 +477,14 @@ export const TRIPS: Trip[] = [
     places: [
       place("p1", "airport", "Netaji Subhas Chandra Bose Intl (CCU)", 22.6547, 88.4467),
       place("p2", "hotel", "ITC Sonar", 22.5417, 88.3997, "₹5,700 / night"),
-      place("p3", "meeting", "Bengal Intelligent Park, Salt Lake V", 22.5726, 88.431, "Alpha block"),
+      place(
+        "p3",
+        "meeting",
+        "Bengal Intelligent Park, Salt Lake V",
+        22.5726,
+        88.431,
+        "Alpha block",
+      ),
       place("p4", "restaurant", "6 Ballygunge Place", 22.5236, 88.3639),
       place("p5", "restaurant", "Peter Cat, Park Street", 22.5533, 88.352),
     ],
@@ -375,7 +498,13 @@ export const TRIPS: Trip[] = [
     budgetINR: 28000,
     expenses: [],
     activity: [
-      { id: "a1", at: at(-1, 17, 25), agent: "discovery", text: "Scored business value 58 — recommending a video pitch first", mode: "auto" },
+      {
+        id: "a1",
+        at: at(-1, 17, 25),
+        agent: "discovery",
+        text: "Scored business value 58 — recommending a video pitch first",
+        mode: "auto",
+      },
     ],
     autonomy: { discovery: "suggest", pretrip: "approve", live: "approve", post: "auto" },
     discovery: {
@@ -397,7 +526,10 @@ export const INITIAL_DECISIONS = [
     reasoning:
       "Your meeting is at Cyber Towers, 1.2 km away. The cheaper option is 9 km away and adds ~50 minutes of travel across two days. The upgraded rate of ₹6,900 still sits under the ₹8,000 metro cap.",
     confidence: 86,
-    alternatives: ["Keep Lemon Tree Premier (₹5,900, 9 km away)", "Shift meeting start by 30 minutes"],
+    alternatives: [
+      "Keep Lemon Tree Premier (₹5,900, 9 km away)",
+      "Shift meeting start by 30 minutes",
+    ],
     createdAt: at(0, 8, 5),
     status: "pending" as const,
   },
@@ -409,7 +541,11 @@ export const INITIAL_DECISIONS = [
     reasoning:
       "Business value scores 63/100. The walkthrough needs a floor visit, but the appraisal calibration on day 1 clashes. Travelling adds ₹16,800 against a ₹30,000 budget.",
     confidence: 61,
-    alternatives: ["Move the trip one week later", "Send a regional lead instead", "Run it over video"],
+    alternatives: [
+      "Move the trip one week later",
+      "Send a regional lead instead",
+      "Run it over video",
+    ],
     createdAt: at(0, 9, 12),
     status: "pending" as const,
   },

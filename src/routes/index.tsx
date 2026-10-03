@@ -5,9 +5,15 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "My trips — TravelFlow" },
-      { name: "description", content: "Plan, review, and manage corporate travel with TravelFlow agents." },
+      {
+        name: "description",
+        content: "Plan, review, and manage corporate travel with TravelFlow agents.",
+      },
       { property: "og:title", content: "My trips — TravelFlow" },
-      { property: "og:description", content: "Plan, review, and manage corporate travel with TravelFlow agents." },
+      {
+        property: "og:description",
+        content: "Plan, review, and manage corporate travel with TravelFlow agents.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
