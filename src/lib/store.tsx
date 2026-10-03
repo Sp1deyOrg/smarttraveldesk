@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 import { INITIAL_DECISIONS, TRIPS } from "./trip-data";
 import { INITIAL_ESCALATIONS, INITIAL_EXCEPTIONS, type InvoiceStatus } from "./desk-data";
-import { POLICY_GRADES, applyGradePolicies, type GradePolicy } from "./policy";
+import { DEFAULT_GRADES, TRAVELLER_GRADE, gradePolicy, type GradePolicy } from "./policy";
 import type {
   ActivityEntry,
   AgentId,
@@ -41,6 +41,8 @@ interface Ctx {
   escalations: Escalation[];
   exceptions: PolicyException[];
   grades: GradePolicy[];
+  /** Grade policy that applies to the traveller; pass it to the pure policy functions. */
+  travellerPolicy: GradePolicy;
   deskMessages: DeskMessage[];
   invoiceStatus: Record<string, InvoiceStatus>;
   setPersona: (p: Persona) => void;
@@ -75,13 +77,17 @@ export function TripProvider({ children }: { children: ReactNode }) {
   const [persona, setPersona] = useState<Persona>("employee");
   const [escalations, setEscalations] = useState<Escalation[]>(INITIAL_ESCALATIONS);
   const [exceptions, setExceptions] = useState<PolicyException[]>(INITIAL_EXCEPTIONS);
-  const [grades, setGradesState] = useState<GradePolicy[]>(() => POLICY_GRADES.map((g) => ({ ...g })));
+  const [grades, setGradesState] = useState<GradePolicy[]>(() =>
+    DEFAULT_GRADES.map((g) => ({ ...g })),
+  );
   const [deskMessages, setDeskMessages] = useState<DeskMessage[]>([]);
   const [invoiceStatus, setInvoiceStatusState] = useState<Record<string, InvoiceStatus>>({});
 
   const updateTrip = useCallback<Ctx["updateTrip"]>((id, patch) => {
     setTrips((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, ...(typeof patch === "function" ? patch(t) : patch) } : t)),
+      prev.map((t) =>
+        t.id === id ? { ...t, ...(typeof patch === "function" ? patch(t) : patch) } : t,
+      ),
     );
   }, []);
 
@@ -113,7 +119,9 @@ export function TripProvider({ children }: { children: ReactNode }) {
     const resolveEscalationInner = (id: string, note: string, notify: boolean) => {
       const e = escalations.find((x) => x.id === id);
       if (!e || e.status === "resolved") return;
-      setEscalations((prev) => prev.map((x) => (x.id === id ? { ...x, status: "resolved", note } : x)));
+      setEscalations((prev) =>
+        prev.map((x) => (x.id === id ? { ...x, status: "resolved", note } : x)),
+      );
       if (notify) {
         log(e.tripId, "pretrip", `Travel Desk resolved “${e.title}”: ${note}`, "approval");
         addDecision({
@@ -135,6 +143,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
       escalations,
       exceptions,
       grades,
+      travellerPolicy: gradePolicy(grades, TRAVELLER_GRADE),
       deskMessages,
       invoiceStatus,
       setPersona,
@@ -153,7 +162,9 @@ export function TripProvider({ children }: { children: ReactNode }) {
         updateTrip(tripId, (t) => ({
           expenses: t.expenses.map((e) => (e.id === expenseId ? { ...e, receipt } : e)),
         }));
-        const missing = trip.expenses.filter((e) => e.id !== expenseId && e.receiptRequired && !e.receipt).length;
+        const missing = trip.expenses.filter(
+          (e) => e.id !== expenseId && e.receiptRequired && !e.receipt,
+        ).length;
         log(
           tripId,
           "post",
@@ -183,9 +194,14 @@ export function TripProvider({ children }: { children: ReactNode }) {
       resolveEscalation: (id, note) => resolveEscalationInner(id, note, true),
       raiseException: (x) => {
         const id = uid("x");
-        setExceptions((prev) => [{ ...x, id, createdAt: new Date().toISOString(), status: "pending" }, ...prev]);
+        setExceptions((prev) => [
+          { ...x, id, createdAt: new Date().toISOString(), status: "pending" },
+          ...prev,
+        ]);
         if (x.escalationId) {
-          setEscalations((prev) => prev.map((e) => (e.id === x.escalationId ? { ...e, exceptionId: id } : e)));
+          setEscalations((prev) =>
+            prev.map((e) => (e.id === x.escalationId ? { ...e, exceptionId: id } : e)),
+          );
         }
         log(x.tripId, "pretrip", `Policy exception sent to manager: ${x.title}`, "approval");
         return id;
@@ -216,10 +232,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
           alternatives: [],
         });
       },
-      setGrades: (g) => {
-        applyGradePolicies(g);
-        setGradesState(g.map((x) => ({ ...x })));
-      },
+      setGrades: (g) => setGradesState(g.map((x) => ({ ...x }))),
       sendDeskMessage: (travellerId, text, tripId) => {
         setDeskMessages((prev) => [
           ...prev,
