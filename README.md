@@ -68,6 +68,15 @@ bun run start      # serve the build on $PORT (default 3000)
 
 5. Push to `main`. `.github/workflows/deploy-dev.yml` builds the Docker image, deploys the `travelflow` Cloud Run service and smoke-tests it.
 
+### If the smoke test returns 403
+
+Google Cloud organizations created from a Workspace account since May 2024 enforce **Domain restricted sharing** by default. It blocks the `allUsers` grant that makes the Cloud Run service public, so the deploy succeeds but every request gets 403. To allow it for this project only:
+
+1. In the Cloud console, select your **organization** (not the project), open **IAM & Admin → IAM**, and grant yourself **Organization Policy Administrator**.
+2. Switch to the project, open **IAM & Admin → Organization policies**, and find **Domain restricted sharing** (`iam.allowedPolicyMemberDomains`). If your org shows **Restrict allowed policy members in IAM allow policies** (`iam.managed.allowedPolicyMembers`) instead, use that one.
+3. **Manage policy → Override parent's policy → Replace → Add a rule → Allow All**, then **Set policy**.
+4. Re-run **Actions → Deploy dev → Run workflow**.
+
 ## Layout
 
 ```
