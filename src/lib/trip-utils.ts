@@ -50,6 +50,9 @@ export function formatDateRange(trip: Trip) {
   return `${f(trip.startDate)} – ${f(trip.endDate)}`;
 }
 
+/** Items the traveller ticks off before leaving; also summarised on the quick-action card. */
+export const DOCUMENT_CHECKLIST = ["ID card", "Client NDA", "Laptop charger", "Forex card"];
+
 export interface TimedAction {
   id: string;
   title: string;
@@ -72,7 +75,7 @@ export function timedActions(trip: Trip, now = Date.now()): TimedAction[] {
     out.push({
       id: "docs",
       title: "Document checklist",
-      detail: "ID card, client NDA, laptop charger, forex card",
+      detail: DOCUMENT_CHECKLIST.join(", "),
       cta: "Review list",
     });
   if (h <= 24 && h > -6)
@@ -83,4 +86,24 @@ export function timedActions(trip: Trip, now = Date.now()): TimedAction[] {
       cta: "Request",
     });
   return out;
+}
+
+export interface DateWindow {
+  startDate: string;
+  endDate: string;
+  label: string;
+}
+
+/** The same trip shifted by whole weeks, so meeting weekdays line up with the original plan. */
+export function alternativeWindows(trip: Trip, weeks = [1, 2, 3]): DateWindow[] {
+  const shift = (iso: string, days: number) => {
+    const d = new Date(iso);
+    d.setDate(d.getDate() + days);
+    return d.toISOString();
+  };
+  return weeks.map((w) => {
+    const startDate = shift(trip.startDate, w * 7);
+    const endDate = shift(trip.endDate, w * 7);
+    return { startDate, endDate, label: formatDateRange({ ...trip, startDate, endDate }) };
+  });
 }

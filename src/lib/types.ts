@@ -85,6 +85,12 @@ export interface ActivityEntry {
   mode: "auto" | "approval";
 }
 
+/** A receipt picked in the browser. Only the object URL is kept; nothing is uploaded. */
+export interface Receipt {
+  name: string;
+  url: string;
+}
+
 export interface Expense {
   id: string;
   category: "Flight" | "Hotel" | "Cab" | "Meals" | "Other";
@@ -92,6 +98,9 @@ export interface Expense {
   amountINR: number;
   sharedWith?: { name: string; tripId: string; city: string }[];
   source: "auto" | "manual";
+  /** The expense report needs a receipt for this line (e.g. meals, local cabs). */
+  receiptRequired?: boolean;
+  receipt?: Receipt;
 }
 
 export interface Trip {
@@ -128,6 +137,8 @@ export interface Trip {
     disrupted: boolean;
   };
   extractedBy?: "ai" | "rules";
+  /** Ids of quick actions (check-in, document checklist, …) the traveller has completed. */
+  doneActions?: string[];
 }
 
 export interface Preferences {
@@ -141,7 +152,16 @@ export interface Preferences {
 
 export type Persona = "employee" | "desk" | "manager";
 
-export type EscalationKind = "fare" | "hotel" | "booking" | "assistance" | "sameday";
+export type EscalationKind = "fare" | "hotel" | "booking" | "assistance" | "sameday" | "change";
+
+/** A message the Travel Desk sent to a traveller from the live tracker. */
+export interface DeskMessage {
+  id: string;
+  /** The trip id for the signed-in traveller, otherwise the colleague's traveller id. */
+  travellerId: string;
+  text: string;
+  at: string;
+}
 
 export interface Escalation {
   id: string;

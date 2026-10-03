@@ -6,6 +6,9 @@ export const COMPANY_GSTIN = "29AABCT1234F1ZP";
 export const DESK_USER = "Anita Rao (Travel Desk)";
 export const MONTH_BUDGET_INR = 4_200_000;
 export const MONTH_SPEND_BASE_INR = 2_870_000;
+/** The signed-in traveller; the phone number is placeholder data. */
+export const EMPLOYEE_NAME = "Riya Sharma";
+export const EMPLOYEE_PHONE = "+91 90000 10001";
 
 export const INITIAL_ESCALATIONS: Escalation[] = [
   {
@@ -112,6 +115,9 @@ export interface Invoice {
   gstin: string | null;
 }
 
+/** Where an invoice stands once the desk has acted on it. Untouched invoices have no entry. */
+export type InvoiceStatus = "raised" | "reconciled";
+
 export const INVOICES: Invoice[] = [
   { id: "i1", invoiceNo: "6E/24/88213", vendor: "IndiGo", type: "Airline", tripId: "TRV-2481", bookingRef: "PNR K7Q2LM", bookedINR: 9850, invoicedINR: 9850, gstINR: 492, gstin: COMPANY_GSTIN },
   { id: "i2", invoiceNo: "TJ-MUM-5521", vendor: "Taj Lands End", type: "Hotel", tripId: "TRV-2481", bookingRef: "TAJ-77120", bookedINR: 15600, invoicedINR: 15600, gstINR: 1872, gstin: COMPANY_GSTIN },
@@ -128,6 +134,7 @@ export interface OtherTraveller {
   tripId: string;
   name: string;
   department: string;
+  phone: string;
   city: string;
   lat: number;
   lng: number;
@@ -136,10 +143,10 @@ export interface OtherTraveller {
 }
 
 export const OTHER_TRAVELLERS: OtherTraveller[] = [
-  { id: "t1", tripId: "TRV-2503", name: "Arjun Mehta", department: "Sales", city: "Delhi NCR", lat: 28.5562, lng: 77.1, status: "Landed at IGI T3 · cab en route", },
-  { id: "t2", tripId: "TRV-2455", name: "Kavya Iyer", department: "Engineering", city: "Chennai", lat: 12.9941, lng: 80.1709, status: "Flight AI-543 cancelled", alert: "Flight cancelled · rebooking needed on next departure" },
-  { id: "t3", tripId: "TRV-2492", name: "Rohan Das", department: "Consulting", city: "Hyderabad", lat: 17.4435, lng: 78.3772, status: "At client site, HITEC City" },
-  { id: "t4", tripId: "TRV-2510", name: "Neha Kulkarni", department: "Finance", city: "Pune", lat: 18.5793, lng: 73.9089, status: "Boarding 6E-512 to Bengaluru" },
+  { id: "t1", tripId: "TRV-2503", name: "Arjun Mehta", department: "Sales", phone: "+91 90000 10002", city: "Delhi NCR", lat: 28.5562, lng: 77.1, status: "Landed at IGI T3 · cab en route", },
+  { id: "t2", tripId: "TRV-2455", name: "Kavya Iyer", department: "Engineering", phone: "+91 90000 10003", city: "Chennai", lat: 12.9941, lng: 80.1709, status: "Flight AI-543 cancelled", alert: "Flight cancelled · rebooking needed on next departure" },
+  { id: "t3", tripId: "TRV-2492", name: "Rohan Das", department: "Consulting", phone: "+91 90000 10004", city: "Hyderabad", lat: 17.4435, lng: 78.3772, status: "At client site, HITEC City" },
+  { id: "t4", tripId: "TRV-2510", name: "Neha Kulkarni", department: "Finance", phone: "+91 90000 10005", city: "Pune", lat: 18.5793, lng: 73.9089, status: "Boarding 6E-512 to Bengaluru" },
 ];
 
 export const DEPARTMENT_SPEND: { department: string; spendINR: number; budgetINR: number }[] = [
