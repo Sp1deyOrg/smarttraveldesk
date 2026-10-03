@@ -47,4 +47,10 @@ jobs:
         run: |
           url="$(gcloud run services describe "${{ vars.GCP_SERVICE }}" --region "${{ vars.GCP_REGION }}" --format='value(status.url)')"
           echo "Deployed: $url"
-          curl -fsS -o /dev/null -w "GET / -> %{http_code}\n" "$url/"
+          code="$(curl -s -o /dev/null -w '%{http_code}' "$url/")"
+          echo "GET / -> $code"
+          if [ "$code" = "403" ]; then
+            echo "::error::Cloud Run answered 403, so the service is not public. Your Google Cloud organization probably enforces 'Domain restricted sharing', which blocks the allUsers grant. See 'If the smoke test returns 403' in README.md."
+            exit 1
+          fi
+          test "$code" = "200"
