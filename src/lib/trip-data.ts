@@ -329,8 +329,8 @@ export const TRIPS: Trip[] = [
     expenses: [
       { id: "e1", category: "Flight", description: "IndiGo 6E-512 return", amountINR: 11800, source: "auto" },
       { id: "e2", category: "Hotel", description: "Taj Coromandel · 3 nights", amountINR: 23700, source: "auto" },
-      { id: "e3", category: "Cab", description: "Local travel", amountINR: 3240, source: "auto" },
-      { id: "e4", category: "Meals", description: "Team dinner (shared)", amountINR: 4600, source: "manual" },
+      { id: "e3", category: "Cab", description: "Local travel", amountINR: 3240, source: "auto", receiptRequired: true },
+      { id: "e4", category: "Meals", description: "Team dinner (shared)", amountINR: 4600, source: "manual", receiptRequired: true },
     ],
     activity: [
       { id: "a1", at: at(-6, 21, 0), agent: "post", text: "Drafted expense report from bookings", mode: "auto" },

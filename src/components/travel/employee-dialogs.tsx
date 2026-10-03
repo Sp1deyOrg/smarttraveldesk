@@ -52,8 +52,8 @@ export function AboutDialog({ open, onOpenChange }: { open: boolean; onOpenChang
           <DialogDescription>TravelFlow demonstrates how specialist agents can manage a corporate trip while the employee stays in control.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-3 sm:grid-cols-2">
-          <InfoBlock icon={Sparkles} title="Working logic" items={["AI trip extraction", "Option scoring", "Policy checks", "Distance calculation", "Expense matching"]} />
-          <InfoBlock icon={Bot} title="Simulated services" items={["Flight and hotel bookings", "Live flight status", "Calendar and CRM data", "Contact actions"]} />
+          <InfoBlock icon={Sparkles} title="Working logic" items={["AI trip extraction", "Option scoring", "Policy checks", "Distance calculation", "Expense matching", "Calendar and ticket downloads", "Receipt attachments (kept in this browser)"]} />
+          <InfoBlock icon={Bot} title="Simulated services" items={["Flight and hotel bookings", "Live flight status", "Calendar and CRM data", "Phone, message and vendor email delivery"]} />
         </div>
         <div className="flex items-center gap-2 border-t pt-4 text-sm text-muted-foreground"><Plane className="size-4" />Single-traveller corporate travel for Riya Sharma · L4 Manager</div>
       </DialogContent>

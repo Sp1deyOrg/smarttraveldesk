@@ -1,18 +1,19 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
-import { toast } from "sonner";
 import { INITIAL_DECISIONS, TRIPS } from "./trip-data";
-import { INITIAL_ESCALATIONS, INITIAL_EXCEPTIONS } from "./desk-data";
+import { INITIAL_ESCALATIONS, INITIAL_EXCEPTIONS, type InvoiceStatus } from "./desk-data";
 import { POLICY_GRADES, applyGradePolicies, type GradePolicy } from "./policy";
 import type {
   ActivityEntry,
   AgentId,
   Autonomy,
   Decision,
+  DeskMessage,
   Escalation,
   Expense,
   Persona,
   PolicyException,
   Preferences,
+  Receipt,
   Stage,
   Trip,
   Weights,
@@ -40,6 +41,8 @@ interface Ctx {
   escalations: Escalation[];
   exceptions: PolicyException[];
   grades: GradePolicy[];
+  deskMessages: DeskMessage[];
+  invoiceStatus: Record<string, InvoiceStatus>;
   setPersona: (p: Persona) => void;
   setPrefs: (p: Preferences) => void;
   updateTrip: (id: string, patch: Partial<Trip> | ((t: Trip) => Partial<Trip>)) => void;
@@ -48,6 +51,7 @@ interface Ctx {
   setAutonomy: (tripId: string, agent: AgentId, value: Autonomy) => void;
   setWeights: (tripId: string, w: Weights) => void;
   addExpense: (tripId: string, e: Expense) => void;
+  attachReceipt: (tripId: string, expenseId: string, receipt: Receipt) => void;
   resolveDecision: (id: string, status: "approved" | "rejected") => void;
   addDecision: (d: NewDecision) => void;
   advanceStage: (tripId: string, stage: Stage) => void;
@@ -57,6 +61,9 @@ interface Ctx {
   raiseException: (x: Omit<PolicyException, "id" | "createdAt" | "status">) => string;
   decideException: (id: string, status: "approved" | "rejected", comment: string) => void;
   setGrades: (g: GradePolicy[]) => void;
+  /** Messages the desk sends from the live tracker. Pass `tripId` when the traveller owns a trip here. */
+  sendDeskMessage: (travellerId: string, text: string, tripId?: string) => void;
+  setInvoiceStatus: (invoiceId: string, status: InvoiceStatus) => void;
 }
 
 const TripContext = createContext<Ctx | null>(null);
@@ -69,6 +76,8 @@ export function TripProvider({ children }: { children: ReactNode }) {
   const [escalations, setEscalations] = useState<Escalation[]>(INITIAL_ESCALATIONS);
   const [exceptions, setExceptions] = useState<PolicyException[]>(INITIAL_EXCEPTIONS);
   const [grades, setGradesState] = useState<GradePolicy[]>(() => POLICY_GRADES.map((g) => ({ ...g })));
+  const [deskMessages, setDeskMessages] = useState<DeskMessage[]>([]);
+  const [invoiceStatus, setInvoiceStatusState] = useState<Record<string, InvoiceStatus>>({});
 
   const updateTrip = useCallback<Ctx["updateTrip"]>((id, patch) => {
     setTrips((prev) =>
@@ -126,6 +135,8 @@ export function TripProvider({ children }: { children: ReactNode }) {
       escalations,
       exceptions,
       grades,
+      deskMessages,
+      invoiceStatus,
       setPersona,
       setPrefs,
       updateTrip,
@@ -135,6 +146,21 @@ export function TripProvider({ children }: { children: ReactNode }) {
         updateTrip(tripId, (t) => ({ autonomy: { ...t.autonomy, [agent]: v } })),
       setWeights: (tripId, w) => updateTrip(tripId, { weights: w }),
       addExpense: (tripId, e) => updateTrip(tripId, (t) => ({ expenses: [...t.expenses, e] })),
+      attachReceipt: (tripId, expenseId, receipt) => {
+        const trip = trips.find((t) => t.id === tripId);
+        const expense = trip?.expenses.find((e) => e.id === expenseId);
+        if (!trip || !expense) return;
+        updateTrip(tripId, (t) => ({
+          expenses: t.expenses.map((e) => (e.id === expenseId ? { ...e, receipt } : e)),
+        }));
+        const missing = trip.expenses.filter((e) => e.id !== expenseId && e.receiptRequired && !e.receipt).length;
+        log(
+          tripId,
+          "post",
+          `Receipt attached to “${expense.description}” · ${missing ? `${missing} still missing` : "expense report complete"}`,
+          "approval",
+        );
+      },
       resolveDecision: (id, status) => {
         const d = decisions.find((x) => x.id === id);
         setDecisions((prev) => prev.map((x) => (x.id === id ? { ...x, status } : x)));
@@ -194,8 +220,30 @@ export function TripProvider({ children }: { children: ReactNode }) {
         applyGradePolicies(g);
         setGradesState(g.map((x) => ({ ...x })));
       },
+      sendDeskMessage: (travellerId, text, tripId) => {
+        setDeskMessages((prev) => [
+          ...prev,
+          { id: uid("m"), travellerId, text, at: new Date().toISOString() },
+        ]);
+        if (tripId) log(tripId, "live", `Travel Desk message: ${text}`, "approval");
+      },
+      setInvoiceStatus: (invoiceId, status) =>
+        setInvoiceStatusState((prev) => ({ ...prev, [invoiceId]: status })),
     };
-  }, [trips, prefs, decisions, persona, escalations, exceptions, grades, updateTrip, log, addDecision]);
+  }, [
+    trips,
+    prefs,
+    decisions,
+    persona,
+    escalations,
+    exceptions,
+    grades,
+    deskMessages,
+    invoiceStatus,
+    updateTrip,
+    log,
+    addDecision,
+  ]);
 
   return <TripContext.Provider value={value}>{children}</TripContext.Provider>;
 }
@@ -204,10 +252,6 @@ export function useTrips() {
   const ctx = useContext(TripContext);
   if (!ctx) throw new Error("useTrips must be used inside TripProvider");
   return ctx;
-}
-
-export function demoAction(label: string) {
-  toast(`${label} is a simulated action in this prototype.`);
 }
 
 /** Activity-log mode for an agent's action, driven by its autonomy setting. */

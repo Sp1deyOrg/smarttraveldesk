@@ -3,15 +3,17 @@ import { toast } from "sonner";
 import { AlertTriangle, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDuration, formatINR } from "@/lib/geo";
 import { policyViolations, rankOptions, type GradePolicy } from "@/lib/policy";
-import { demoAction, useTrips } from "@/lib/store";
+import { useTrips } from "@/lib/store";
 import {
-  COMPANY_GSTIN, DEPARTMENT_SPEND, DESK_USER, INVOICES, MONTH_BUDGET_INR, MONTH_SPEND_BASE_INR, OTHER_TRAVELLERS,
+  COMPANY_GSTIN, DEPARTMENT_SPEND, DESK_USER, EMPLOYEE_NAME, EMPLOYEE_PHONE, INVOICES, MONTH_BUDGET_INR, MONTH_SPEND_BASE_INR, OTHER_TRAVELLERS,
+  type Invoice,
 } from "@/lib/desk-data";
 import type { Escalation, Place } from "@/lib/types";
 import { Kpi, SectionHeading, WorkspaceHeader } from "./workspace";
@@ -25,7 +27,7 @@ const TABS = [
 type Tab = (typeof TABS)[number][0];
 
 const KIND_LABEL: Record<Escalation["kind"], string> = {
-  fare: "Fare above policy", hotel: "No hotel under cap", booking: "Failed booking", assistance: "Special assistance", sameday: "Same-day change",
+  fare: "Fare above policy", hotel: "No hotel under cap", booking: "Failed booking", assistance: "Special assistance", sameday: "Same-day change", change: "Plan change",
 };
 
 function useNow() {
@@ -188,13 +190,16 @@ function BookingConsole({ tripId, onTrip }: { tripId: string | null; onTrip: (id
   );
 }
 
+interface Traveller { id: string; name: string; city: string; phone: string; status: string; alert?: string | undefined; /** Only the signed-in traveller has trips here; colleagues' `tripId`s are just sample references. */ ownTripId?: string }
+
 function Tracker() {
   const { trips } = useTrips();
   const [hydrated, setHydrated] = useState(false);
+  const [contact, setContact] = useState<Traveller | null>(null);
   useEffect(() => setHydrated(true), []);
   const live = trips.filter((t) => t.stage === "live");
-  const people = [
-    ...live.map((t) => { const p = t.places.find((x) => x.kind === "hotel") ?? t.places[0]; return { id: t.id, name: "Riya Sharma", city: t.city, lat: p?.lat ?? 0, lng: p?.lng ?? 0, status: t.live.flight, alert: t.live.disrupted ? "Flight delayed 2h · recovery plan in progress" : undefined }; }),
+  const people: (Traveller & { lat: number; lng: number })[] = [
+    ...live.map((t) => { const p = t.places.find((x) => x.kind === "hotel") ?? t.places[0]; return { id: t.id, ownTripId: t.id, name: EMPLOYEE_NAME, phone: EMPLOYEE_PHONE, city: t.city, lat: p?.lat ?? 0, lng: p?.lng ?? 0, status: t.live.flight, alert: t.live.disrupted ? "Flight delayed 2h · recovery plan in progress" : undefined }; }),
     ...OTHER_TRAVELLERS,
   ];
   const places: Place[] = people.map((p) => ({ id: p.id, kind: "meeting", name: `${p.name} · ${p.city}`, detail: p.status, lat: p.lat, lng: p.lng }));
@@ -207,13 +212,40 @@ function Tracker() {
         <SectionHeading eyebrow="On the road now" title={`${people.length} travellers`} />
         {people.map((p) => (
           <div key={p.id} className={`rounded-md border bg-card p-3 ${p.alert ? "border-warning" : ""}`}>
-            <div className="flex items-center justify-between gap-2"><p className="font-semibold">{p.name} <span className="text-xs text-muted-foreground">· {p.city}</span></p><Button size="sm" variant="ghost" onClick={() => demoAction(`Calling ${p.name}`)}><Phone />Contact</Button></div>
+            <div className="flex items-center justify-between gap-2"><p className="font-semibold">{p.name} <span className="text-xs text-muted-foreground">· {p.city}</span></p><Button size="sm" variant="ghost" onClick={() => setContact(p)}><Phone />Contact</Button></div>
             <p className="text-xs text-muted-foreground">{p.status}</p>
             {p.alert && <p className="mt-1 flex items-center gap-1 text-xs font-semibold text-warning"><AlertTriangle className="size-3" />{p.alert}</p>}
           </div>
         ))}
       </aside>
+      {contact && <ContactDialog key={contact.id} person={contact} onClose={() => setContact(null)} />}
     </section>
+  );
+}
+
+function ContactDialog({ person, onClose }: { person: Traveller; onClose: () => void }) {
+  const { deskMessages, sendDeskMessage } = useTrips();
+  const [text, setText] = useState("");
+  const history = deskMessages.filter((m) => m.travellerId === person.id);
+  const send = () => {
+    sendDeskMessage(person.id, text.trim(), person.ownTripId);
+    toast.success(`Message sent to ${person.name}`);
+    setText("");
+  };
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Contact {person.name}</DialogTitle>
+          <DialogDescription>{person.city} · {person.status}</DialogDescription>
+        </DialogHeader>
+        {person.alert && <p className="flex items-center gap-1 text-xs font-semibold text-warning"><AlertTriangle className="size-3" />{person.alert}</p>}
+        <Button asChild variant="outline"><a href={`tel:${person.phone.replace(/[^\d+]/g, "")}`}><Phone />Call {person.phone}</a></Button>
+        {history.length > 0 && <ul className="max-h-40 space-y-2 overflow-y-auto rounded-md bg-muted/50 p-3 text-sm">{history.map((m) => <li key={m.id}><p>{m.text}</p><p className="text-xs text-muted-foreground">{new Date(m.at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</p></li>)}</ul>}
+        <Textarea value={text} onChange={(e) => setText(e.target.value)} placeholder={person.ownTripId ? "Appears in Riya's agent activity log" : "Write a message to the traveller"} aria-label={`Message to ${person.name}`} />
+        <DialogFooter><Button disabled={!text.trim()} onClick={send}>Send message</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -247,14 +279,48 @@ function PolicyScreen() {
   );
 }
 
+/** What the desk asks the vendor for, one line per problem found on the invoice. */
+function draftVendorRequest(inv: Invoice, flags: string[]) {
+  const asks = flags.map((flag) => {
+    if (flag.startsWith("Amount")) return `- Booked ${formatINR(inv.bookedINR)} but invoiced ${formatINR(inv.invoicedINR)}. Please issue a corrected invoice for ${formatINR(inv.bookedINR)}.`;
+    if (flag.startsWith("Duplicate")) return `- Invoice ${inv.invoiceNo} has been issued twice. Please cancel the duplicate with a credit note.`;
+    return `- The invoice does not carry our GSTIN (${COMPANY_GSTIN}). Please reissue it with the GSTIN so we can claim input tax credit.`;
+  });
+  return `Hello ${inv.vendor} billing team,\n\nWe found the following on invoice ${inv.invoiceNo} (${inv.bookingRef}, trip ${inv.tripId}):\n\n${asks.join("\n")}\n\nPlease reply with the corrected document at your earliest convenience.\n\nThanks,\n${DESK_USER}`;
+}
+
+function VendorRequestDialog({ inv, flags, onClose }: { inv: Invoice; flags: string[]; onClose: () => void }) {
+  const { setInvoiceStatus } = useTrips();
+  const [message, setMessage] = useState(() => draftVendorRequest(inv, flags));
+  const send = () => {
+    setInvoiceStatus(inv.id, "raised");
+    toast.success(`Request sent to ${inv.vendor}`);
+    onClose();
+  };
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Raise with {inv.vendor}</DialogTitle>
+          <DialogDescription>Corrected invoice request for {inv.invoiceNo}. Edit the message before sending.</DialogDescription>
+        </DialogHeader>
+        <Textarea className="min-h-56" value={message} onChange={(e) => setMessage(e.target.value)} aria-label="Message to vendor" />
+        <DialogFooter><Button disabled={!message.trim()} onClick={send}>Send request</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function Invoices() {
-  const [done, setDone] = useState<string[]>([]);
+  const { invoiceStatus, setInvoiceStatus } = useTrips();
+  const [requesting, setRequesting] = useState<{ inv: Invoice; flags: string[] } | null>(null);
   const rows = INVOICES.map((inv) => {
     const flags: string[] = [];
     if (inv.invoicedINR !== inv.bookedINR) flags.push(`Amount mismatch (+${formatINR(inv.invoicedINR - inv.bookedINR)})`);
     if (INVOICES.some((o) => o.id < inv.id && o.invoiceNo === inv.invoiceNo && o.vendor === inv.vendor)) flags.push("Duplicate invoice");
     if (inv.type === "Hotel" && inv.gstin !== COMPANY_GSTIN) flags.push("Missing company GSTIN — ITC blocked");
-    return { inv, flags };
+    // A reconciled invoice has been corrected or cleared, so its problems no longer count.
+    return { inv, flags: invoiceStatus[inv.id] === "reconciled" ? [] : flags };
   });
   const claimable = rows.filter((r) => !r.flags.some((f) => f.startsWith("Duplicate") || f.startsWith("Missing"))).reduce((s, r) => s + r.inv.gstINR, 0);
   const atRisk = rows.reduce((s, r) => s + r.inv.gstINR, 0) - claimable;
@@ -273,12 +339,13 @@ function Invoices() {
               <td className="p-3"><p className="font-semibold">{inv.vendor}</p><p className="text-xs text-muted-foreground">{inv.type} · {inv.invoiceNo}</p></td>
               <td className="p-3">{inv.tripId}<p className="text-xs text-muted-foreground">{inv.bookingRef}</p></td>
               <td className="p-3">{formatINR(inv.bookedINR)}</td><td className="p-3">{formatINR(inv.invoicedINR)}</td><td className="p-3">{formatINR(inv.gstINR)}</td>
-              <td className="p-3">{done.includes(inv.id) ? <Badge>Reconciled</Badge> : flags.length ? flags.map((f) => <p key={f} className="text-xs font-semibold text-destructive">{f}</p>) : <span className="text-xs font-semibold text-success">Matched</span>}</td>
-              <td className="p-3">{!done.includes(inv.id) && (flags.length ? <Button size="sm" variant="outline" onClick={() => demoAction("Request corrected invoice from vendor")}>Raise with vendor</Button> : <Button size="sm" variant="ghost" onClick={() => setDone((d) => [...d, inv.id])}>Mark reconciled</Button>)}</td>
+              <td className="p-3">{invoiceStatus[inv.id] === "reconciled" ? <Badge>Reconciled</Badge> : <>{flags.length ? flags.map((f) => <p key={f} className="text-xs font-semibold text-destructive">{f}</p>) : <span className="text-xs font-semibold text-success">Matched</span>}{invoiceStatus[inv.id] === "raised" && <Badge variant="secondary" className="mt-1">Awaiting vendor</Badge>}</>}</td>
+              <td className="p-3">{invoiceStatus[inv.id] === "reconciled" ? null : invoiceStatus[inv.id] === "raised" ? <Button size="sm" variant="outline" onClick={() => { setInvoiceStatus(inv.id, "reconciled"); toast.success("Corrected invoice received — reconciled"); }}>Mark corrected</Button> : flags.length ? <Button size="sm" variant="outline" onClick={() => setRequesting({ inv, flags })}>Raise with vendor</Button> : <Button size="sm" variant="ghost" onClick={() => { setInvoiceStatus(inv.id, "reconciled"); toast.success("Invoice reconciled"); }}>Mark reconciled</Button>}</td>
             </tr>
           ))}</tbody>
         </table>
       </div>
+      {requesting && <VendorRequestDialog key={requesting.inv.id} inv={requesting.inv} flags={requesting.flags} onClose={() => setRequesting(null)} />}
     </>
   );
 }

@@ -23,7 +23,7 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { extractTrip, type TripExtraction } from "@/lib/extract-trip.functions";
 import { ruleParse } from "@/lib/rule-parser";
-import { demoAction, newTripId, useTrips } from "@/lib/store";
+import { newTripId, useTrips } from "@/lib/store";
 import {
   currentTrip,
   formatDateRange,
@@ -33,6 +33,7 @@ import {
 import { AGENTS, STAGES, type Trip } from "@/lib/types";
 import { PreferencesDialog } from "./employee-dialogs";
 import { PrioritySplitSlider } from "./priority-split-slider";
+import { QuickActionButton } from "./quick-action-button";
 import { TripDetail } from "./trip-detail";
 import { SectionHeading, WorkspaceHeader } from "./workspace";
 
@@ -351,7 +352,7 @@ function ActionsNow({ trip }: { trip: Trip }) {
     <section>
       <SectionHeading eyebrow="Time sensitive" title="Actions now" />
       <div className="space-y-3">
-        {actions.length ? actions.map((action) => <div key={action.id} className="rounded-md border bg-card p-4 shadow-sm"><div className="flex gap-3"><div className="grid size-8 shrink-0 place-items-center rounded-md bg-accent text-accent-foreground"><Clock3 className="size-4" /></div><div className="min-w-0 flex-1"><p className="text-sm font-bold">{action.title}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{action.detail}</p><Button className="mt-3" size="sm" variant="outline" onClick={() => demoAction(action.cta)}>{action.cta}</Button></div></div></div>) : <div className="rounded-md border bg-card p-4 text-sm text-muted-foreground">The active agent has no time-sensitive actions for you.</div>}
+        {actions.length ? actions.map((action) => <div key={action.id} className="rounded-md border bg-card p-4 shadow-sm"><div className="flex gap-3"><div className="grid size-8 shrink-0 place-items-center rounded-md bg-accent text-accent-foreground"><Clock3 className="size-4" /></div><div className="min-w-0 flex-1"><p className="text-sm font-bold">{action.title}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{action.detail}</p><QuickActionButton trip={trip} action={action} /></div></div></div>) : <div className="rounded-md border bg-card p-4 text-sm text-muted-foreground">The active agent has no time-sensitive actions for you.</div>}
       </div>
     </section>
   );
