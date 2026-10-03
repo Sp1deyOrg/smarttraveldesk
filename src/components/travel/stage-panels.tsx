@@ -1,5 +1,17 @@
 import { useMemo, useState } from "react";
-import { AlertTriangle, CalendarPlus, Check, ChevronRight, Clock3, Download, FileUp, RefreshCw, Star, Video, X } from "lucide-react";
+import {
+  AlertTriangle,
+  CalendarPlus,
+  Check,
+  ChevronRight,
+  Clock3,
+  Download,
+  FileUp,
+  RefreshCw,
+  Star,
+  Video,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,8 +37,22 @@ export function StagePanel({ trip }: { trip: Trip }) {
   return <PostTripPanel trip={trip} />;
 }
 
-function PanelShell({ title, eyebrow, children }: { title: string; eyebrow: string; children: React.ReactNode }) {
-  return <section className="rounded-md border bg-card p-5"><p className="text-xs font-bold uppercase text-primary">{eyebrow}</p><h3 className="mt-1 text-lg font-bold">{title}</h3><div className="mt-4">{children}</div></section>;
+function PanelShell({
+  title,
+  eyebrow,
+  children,
+}: {
+  title: string;
+  eyebrow: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-md border bg-card p-5">
+      <p className="text-xs font-bold uppercase text-primary">{eyebrow}</p>
+      <h3 className="mt-1 text-lg font-bold">{title}</h3>
+      <div className="mt-4">{children}</div>
+    </section>
+  );
 }
 
 function DiscoveryPanel({ trip }: { trip: Trip }) {
@@ -39,61 +65,209 @@ function DiscoveryPanel({ trip }: { trip: Trip }) {
     toast.success(`Trip moved to ${range.label}`);
   };
   const meetRemotely = () => {
-    log(trip.id, "discovery", "Replaced the trip with a video meeting · no travel needed", "approval");
+    log(
+      trip.id,
+      "discovery",
+      "Replaced the trip with a video meeting · no travel needed",
+      "approval",
+    );
     setShowAlternatives(false);
     toast.success("Switched to a video meeting");
   };
-  return <PanelShell eyebrow="Discovery Agent" title="Is this trip worth making?">
-    <div className="grid gap-3 sm:grid-cols-2">
-      <DataPoint label="Trigger" value={trip.discovery.trigger} wide />
-      <DataPoint label="Business value" value={`${trip.discovery.businessValue}/100`} />
-      <DataPoint label="Policy fit" value={trip.discovery.policyFit} />
-      <DataPoint label="Conflicts" value={trip.discovery.conflicts.join(" · ") || "No conflicts detected"} wide />
-    </div>
-    <div className="mt-4 flex flex-wrap gap-2">
-      <Button onClick={() => { advanceStage(trip.id, "planning"); log(trip.id, "discovery", "Requirements approved and handed to Pre-Trip Agent", modeFor(trip, "discovery")); toast.success("Trip need approved"); }}>Review requirements</Button>
-      <Button variant="outline" onClick={() => setShowAlternatives((shown) => !shown)}>{showAlternatives ? "Hide alternatives" : "View alternatives"}</Button>
-      <Button variant="ghost" onClick={() => { log(trip.id, "discovery", "Trip dismissed by the traveller", "approval"); updateTrip(trip.id, { lastAction: "Trip dismissed — no travel needed" }); toast("Trip dismissed"); }}>Dismiss trip</Button>
-    </div>
-    {showAlternatives && <div className="mt-4 space-y-2 rounded-md border p-4">
-      <p className="text-sm font-semibold">Other ways to meet the same goal</p>
-      {alternativeWindows(trip).map((range, index) => <div key={range.startDate} className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-muted/50 p-3">
-        <div><p className="text-sm font-medium">{range.label}</p><p className="text-xs text-muted-foreground">{index + 1} week{index ? "s" : ""} later · same weekdays</p></div>
-        <Button size="sm" variant="outline" onClick={() => moveDates(range)}>Use these dates</Button>
-      </div>)}
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-muted/50 p-3">
-        <div><p className="text-sm font-medium">Meet over video instead</p><p className="text-xs text-muted-foreground">No travel · frees up the {formatINR(trip.budgetINR)} trip budget</p></div>
-        <Button size="sm" variant="outline" onClick={meetRemotely}><Video />Meet remotely</Button>
+  return (
+    <PanelShell eyebrow="Discovery Agent" title="Is this trip worth making?">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <DataPoint label="Trigger" value={trip.discovery.trigger} wide />
+        <DataPoint label="Business value" value={`${trip.discovery.businessValue}/100`} />
+        <DataPoint label="Policy fit" value={trip.discovery.policyFit} />
+        <DataPoint
+          label="Conflicts"
+          value={trip.discovery.conflicts.join(" · ") || "No conflicts detected"}
+          wide
+        />
       </div>
-    </div>}
-  </PanelShell>;
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Button
+          onClick={() => {
+            advanceStage(trip.id, "planning");
+            log(
+              trip.id,
+              "discovery",
+              "Requirements approved and handed to Pre-Trip Agent",
+              modeFor(trip, "discovery"),
+            );
+            toast.success("Trip need approved");
+          }}
+        >
+          Review requirements
+        </Button>
+        <Button variant="outline" onClick={() => setShowAlternatives((shown) => !shown)}>
+          {showAlternatives ? "Hide alternatives" : "View alternatives"}
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={() => {
+            log(trip.id, "discovery", "Trip dismissed by the traveller", "approval");
+            updateTrip(trip.id, { lastAction: "Trip dismissed — no travel needed" });
+            toast("Trip dismissed");
+          }}
+        >
+          Dismiss trip
+        </Button>
+      </div>
+      {showAlternatives && (
+        <div className="mt-4 space-y-2 rounded-md border p-4">
+          <p className="text-sm font-semibold">Other ways to meet the same goal</p>
+          {alternativeWindows(trip).map((range, index) => (
+            <div
+              key={range.startDate}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-muted/50 p-3"
+            >
+              <div>
+                <p className="text-sm font-medium">{range.label}</p>
+                <p className="text-xs text-muted-foreground">
+                  {index + 1} week{index ? "s" : ""} later · same weekdays
+                </p>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => moveDates(range)}>
+                Use these dates
+              </Button>
+            </div>
+          ))}
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-muted/50 p-3">
+            <div>
+              <p className="text-sm font-medium">Meet over video instead</p>
+              <p className="text-xs text-muted-foreground">
+                No travel · frees up the {formatINR(trip.budgetINR)} trip budget
+              </p>
+            </div>
+            <Button size="sm" variant="outline" onClick={meetRemotely}>
+              <Video />
+              Meet remotely
+            </Button>
+          </div>
+        </div>
+      )}
+    </PanelShell>
+  );
 }
 
 function PlanningPanel({ trip }: { trip: Trip }) {
-  const { prefs, grades, setWeights, updateTrip, log, raiseException } = useTrips();
+  const { prefs, travellerPolicy, setWeights, updateTrip, log, raiseException } = useTrips();
   const [compare, setCompare] = useState<string[]>([]);
-  const ranked = useMemo(() => rankOptions(trip.options, trip.weights, trip.cityTier, prefs), [trip.options, trip.weights, trip.cityTier, prefs, grades]);
+  const ranked = useMemo(
+    () => rankOptions(trip.options, trip.weights, trip.cityTier, travellerPolicy, prefs),
+    [trip.options, trip.weights, trip.cityTier, prefs, travellerPolicy],
+  );
   const approve = (optionId: string, label: string) => {
     const entry = ranked.find((r) => r.option.id === optionId);
     if (entry && entry.violations.length) {
       const compliant = ranked.filter((r) => !r.violations.length).map((r) => r.option.costINR);
       const policyCost = compliant.length ? Math.min(...compliant) : entry.option.costINR;
-      raiseException({ tripId: trip.id, optionId, title: `${label}: ${entry.violations[0]}`, justification: `Riya chose '${label}' for ${trip.purpose.toLowerCase()} (${entry.option.comfort}/5 comfort, ${formatDuration(entry.option.doorToDoorMins)} door to door).`, policyCostINR: policyCost, requestedCostINR: entry.option.costINR, recommendation: `Reject: the best compliant option costs ${formatINR(policyCost)} and meets the agenda.`, agentRecommends: "reject" });
-      updateTrip(trip.id, { lastAction: `'${label}' awaiting manager approval (policy exception)` });
+      raiseException({
+        tripId: trip.id,
+        optionId,
+        title: `${label}: ${entry.violations[0]}`,
+        justification: `Riya chose '${label}' for ${trip.purpose.toLowerCase()} (${entry.option.comfort}/5 comfort, ${formatDuration(entry.option.doorToDoorMins)} door to door).`,
+        policyCostINR: policyCost,
+        requestedCostINR: entry.option.costINR,
+        recommendation: `Reject: the best compliant option costs ${formatINR(policyCost)} and meets the agenda.`,
+        agentRecommends: "reject",
+      });
+      updateTrip(trip.id, {
+        lastAction: `'${label}' awaiting manager approval (policy exception)`,
+      });
       toast.warning("Outside policy — sent to your manager for approval");
       return;
     }
-    updateTrip(trip.id, { selectedOptionId: optionId, stage: "confirmed", activeAgent: "pretrip", lastAction: `Approved ${label} · bookings being confirmed` });
+    updateTrip(trip.id, {
+      selectedOptionId: optionId,
+      stage: "confirmed",
+      activeAgent: "pretrip",
+      lastAction: `Approved ${label} · bookings being confirmed`,
+    });
     log(trip.id, "pretrip", `Approved itinerary option '${label}'`, modeFor(trip, "pretrip"));
     toast.success("Itinerary approved");
   };
-  return <PanelShell eyebrow="Pre-Trip Agent" title="Ranked itinerary options">
-    <div className="rounded-md bg-muted/50 p-4">
-      <PrioritySplitSlider value={trip.weights} onChange={(weights) => setWeights(trip.id, weights)} label="Option ranking priorities" />
-    </div>
-    <div className="mt-4 space-y-3">{ranked.map(({ option, score, violations }, index) => <div key={option.id} className="rounded-md border p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><div className="flex items-center gap-2"><span className="text-xs font-bold text-muted-foreground">#{index + 1}</span><h4 className="font-bold">{option.label}</h4>{index === 0 && <Badge>Recommended</Badge>}</div><p className="mt-1 text-sm text-muted-foreground">{option.flight} · {option.hotel}</p></div><div className="text-right"><p className="text-lg font-bold">{formatINR(option.costINR)}</p><p className="text-xs text-muted-foreground">Agent score {score}</p></div></div><div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground"><span>{formatDuration(option.doorToDoorMins)} door to door</span><span>{option.comfort}/5 comfort</span><span>{option.policyScore}% policy score</span></div>{violations.length ? <div className="mt-3 rounded-md bg-destructive/10 p-2 text-xs text-destructive">{violations.join(" · ")}</div> : <p className="mt-3 text-xs font-semibold text-success">Within policy</p>}<div className="mt-3 flex items-center justify-between"><label className="flex items-center gap-2 text-xs"><Checkbox checked={compare.includes(option.id)} onCheckedChange={(checked) => setCompare((current) => checked ? [...current.slice(0, 1), option.id] : current.filter((id) => id !== option.id))} />Compare</label><Button size="sm" onClick={() => approve(option.id, option.label)}>Approve option</Button></div></div>)}</div>
-    {compare.length === 2 && <div className="mt-4 grid gap-3 rounded-md border border-primary/30 bg-accent/30 p-4 sm:grid-cols-2">{compare.map((id) => { const item = ranked.find((entry) => entry.option.id === id); return item ? <div key={id}><p className="font-bold">{item.option.label}</p><p className="mt-1 text-sm">{formatINR(item.option.costINR)} · {formatDuration(item.option.doorToDoorMins)} · {item.option.comfort}/5 comfort</p></div> : null; })}</div>}
-  </PanelShell>;
+  return (
+    <PanelShell eyebrow="Pre-Trip Agent" title="Ranked itinerary options">
+      <div className="rounded-md bg-muted/50 p-4">
+        <PrioritySplitSlider
+          value={trip.weights}
+          onChange={(weights) => setWeights(trip.id, weights)}
+          label="Option ranking priorities"
+        />
+      </div>
+      <div className="mt-4 space-y-3">
+        {ranked.map(({ option, score, violations }, index) => (
+          <div key={option.id} className="rounded-md border p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-muted-foreground">#{index + 1}</span>
+                  <h4 className="font-bold">{option.label}</h4>
+                  {index === 0 && <Badge>Recommended</Badge>}
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {option.flight} · {option.hotel}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-lg font-bold">{formatINR(option.costINR)}</p>
+                <p className="text-xs text-muted-foreground">Agent score {score}</p>
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
+              <span>{formatDuration(option.doorToDoorMins)} door to door</span>
+              <span>{option.comfort}/5 comfort</span>
+              <span>{option.policyScore}% policy score</span>
+            </div>
+            {violations.length ? (
+              <div className="mt-3 rounded-md bg-destructive/10 p-2 text-xs text-destructive">
+                {violations.join(" · ")}
+              </div>
+            ) : (
+              <p className="mt-3 text-xs font-semibold text-success">Within policy</p>
+            )}
+            <div className="mt-3 flex items-center justify-between">
+              <label className="flex items-center gap-2 text-xs">
+                <Checkbox
+                  checked={compare.includes(option.id)}
+                  onCheckedChange={(checked) =>
+                    setCompare((current) =>
+                      checked
+                        ? [...current.slice(0, 1), option.id]
+                        : current.filter((id) => id !== option.id),
+                    )
+                  }
+                />
+                Compare
+              </label>
+              <Button size="sm" onClick={() => approve(option.id, option.label)}>
+                Approve option
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+      {compare.length === 2 && (
+        <div className="mt-4 grid gap-3 rounded-md border border-primary/30 bg-accent/30 p-4 sm:grid-cols-2">
+          {compare.map((id) => {
+            const item = ranked.find((entry) => entry.option.id === id);
+            return item ? (
+              <div key={id}>
+                <p className="font-bold">{item.option.label}</p>
+                <p className="mt-1 text-sm">
+                  {formatINR(item.option.costINR)} · {formatDuration(item.option.doorToDoorMins)} ·{" "}
+                  {item.option.comfort}/5 comfort
+                </p>
+              </div>
+            ) : null;
+          })}
+        </div>
+      )}
+    </PanelShell>
+  );
 }
 
 function ConfirmedPanel({ trip }: { trip: Trip }) {
@@ -102,31 +276,125 @@ function ConfirmedPanel({ trip }: { trip: Trip }) {
     toast.success("Calendar file downloaded — open it to add the trip");
   };
   const downloadTickets = () => {
-    downloadFile(`${trip.id}-tickets.html`, buildTicketsHtml(trip, EMPLOYEE_NAME), "text/html;charset=utf-8");
+    downloadFile(
+      `${trip.id}-tickets.html`,
+      buildTicketsHtml(trip, EMPLOYEE_NAME),
+      "text/html;charset=utf-8",
+    );
     toast.success("Tickets downloaded");
   };
-  return <PanelShell eyebrow="Pre-Trip Agent" title="Everything is confirmed"><div className="grid gap-3 sm:grid-cols-3">{trip.bookings.map((booking) => <DataPoint key={booking.id} label={booking.type} value={`${booking.ref} · ${booking.status}`} />)}</div><div className="mt-4 rounded-md bg-muted/50 p-4"><p className="text-sm font-semibold">Day-by-day timeline</p><div className="mt-3 space-y-3 text-sm">{timeline(trip).map((text) => <TimelineItem key={text} text={text} />)}</div></div><div className="mt-4 flex flex-wrap gap-2"><Button onClick={addToCalendar}><CalendarPlus />Add to calendar</Button><Button variant="outline" onClick={downloadTickets}><Download />Download tickets</Button></div></PanelShell>;
+  return (
+    <PanelShell eyebrow="Pre-Trip Agent" title="Everything is confirmed">
+      <div className="grid gap-3 sm:grid-cols-3">
+        {trip.bookings.map((booking) => (
+          <DataPoint
+            key={booking.id}
+            label={booking.type}
+            value={`${booking.ref} · ${booking.status}`}
+          />
+        ))}
+      </div>
+      <div className="mt-4 rounded-md bg-muted/50 p-4">
+        <p className="text-sm font-semibold">Day-by-day timeline</p>
+        <div className="mt-3 space-y-3 text-sm">
+          {timeline(trip).map((text) => (
+            <TimelineItem key={text} text={text} />
+          ))}
+        </div>
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Button onClick={addToCalendar}>
+          <CalendarPlus />
+          Add to calendar
+        </Button>
+        <Button variant="outline" onClick={downloadTickets}>
+          <Download />
+          Download tickets
+        </Button>
+      </div>
+    </PanelShell>
+  );
 }
 
 function LivePanel({ trip }: { trip: Trip }) {
   const { updateTrip, log, addDecision, addEscalation } = useTrips();
   const simulate = () => {
-    if (trip.live.disrupted) { toast("Disruption already simulated"); return; }
+    if (trip.live.disrupted) {
+      toast("Disruption already simulated");
+      return;
+    }
     const auto = trip.autonomy.live === "auto";
     const suggestOnly = trip.autonomy.live === "suggest";
-    updateTrip(trip.id, { live: { flight: `${trip.live.flight} · delayed 2h`, cab: suggestOnly ? trip.live.cab : "Pickup moved by 2 hours", hotel: trip.live.hotel, disrupted: true }, lastAction: "Flight delay detected · recovery plan prepared" });
-    if (!suggestOnly) log(trip.id, "live", "Moved cab pickup by 2 hours and drafted a note to the meeting organiser", "auto");
+    updateTrip(trip.id, {
+      live: {
+        flight: `${trip.live.flight} · delayed 2h`,
+        cab: suggestOnly ? trip.live.cab : "Pickup moved by 2 hours",
+        hotel: trip.live.hotel,
+        disrupted: true,
+      },
+      lastAction: "Flight delay detected · recovery plan prepared",
+    });
+    if (!suggestOnly)
+      log(
+        trip.id,
+        "live",
+        "Moved cab pickup by 2 hours and drafted a note to the meeting organiser",
+        "auto",
+      );
     if (auto) {
-      updateTrip(trip.id, (t) => ({ live: { ...t.live, flight: "Rebooked onto the next departure", disrupted: false }, lastAction: "Rebooked automatically after a 2-hour delay" }));
+      updateTrip(trip.id, (t) => ({
+        live: { ...t.live, flight: "Rebooked onto the next departure", disrupted: false },
+        lastAction: "Rebooked automatically after a 2-hour delay",
+      }));
       log(trip.id, "live", "Rebooked onto the best available flight automatically", "auto");
       toast.success("Live Agent rebooked automatically");
     } else {
-      addDecision({ tripId: trip.id, agent: "live", action: "rebook", title: "Approve rebooking after 2-hour delay", reasoning: "The current flight now misses the first meeting. A nearby departure preserves the agenda for ₹2,140 more.", confidence: 92, alternatives: ["Keep current flight and join first meeting remotely", "Move the meeting by two hours"] });
-      addEscalation({ tripId: trip.id, kind: "sameday", title: "Same-day change: rebook after 2-hour delay", detail: `${trip.live.flight} delayed 2h. Traveller approval pending; desk to secure seats on the next departure.`, slaMins: 30 });
+      addDecision({
+        tripId: trip.id,
+        agent: "live",
+        action: "rebook",
+        title: "Approve rebooking after 2-hour delay",
+        reasoning:
+          "The current flight now misses the first meeting. A nearby departure preserves the agenda for ₹2,140 more.",
+        confidence: 92,
+        alternatives: [
+          "Keep current flight and join first meeting remotely",
+          "Move the meeting by two hours",
+        ],
+      });
+      addEscalation({
+        tripId: trip.id,
+        kind: "sameday",
+        title: "Same-day change: rebook after 2-hour delay",
+        detail: `${trip.live.flight} delayed 2h. Traveller approval pending; desk to secure seats on the next departure.`,
+        slaMins: 30,
+      });
       toast.warning("Rebooking needs your approval");
     }
   };
-  return <PanelShell eyebrow="Live Trip Agent" title="Your trip is being monitored"><div className="grid gap-3 sm:grid-cols-3"><Status label="Flight" value={trip.live.flight} alert={trip.live.disrupted} /><Status label="Cab" value={trip.live.cab} /><Status label="Hotel" value={trip.live.hotel} /></div>{trip.live.disrupted && <div className="mt-4 rounded-md border border-warning/50 bg-warning/10 p-4"><p className="font-semibold">Recovery plan ready</p><p className="mt-1 text-sm text-muted-foreground">{trip.autonomy.live === "suggest" ? "Rebooking proposed. Cab and organiser changes are waiting for your go-ahead." : "Rebooking proposed, organiser note drafted, and cab pickup moved automatically."}</p></div>}<Button className="mt-4" variant="outline" onClick={simulate}><RefreshCw />Simulate disruption</Button></PanelShell>;
+  return (
+    <PanelShell eyebrow="Live Trip Agent" title="Your trip is being monitored">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Status label="Flight" value={trip.live.flight} alert={trip.live.disrupted} />
+        <Status label="Cab" value={trip.live.cab} />
+        <Status label="Hotel" value={trip.live.hotel} />
+      </div>
+      {trip.live.disrupted && (
+        <div className="mt-4 rounded-md border border-warning/50 bg-warning/10 p-4">
+          <p className="font-semibold">Recovery plan ready</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {trip.autonomy.live === "suggest"
+              ? "Rebooking proposed. Cab and organiser changes are waiting for your go-ahead."
+              : "Rebooking proposed, organiser note drafted, and cab pickup moved automatically."}
+          </p>
+        </div>
+      )}
+      <Button className="mt-4" variant="outline" onClick={simulate}>
+        <RefreshCw />
+        Simulate disruption
+      </Button>
+    </PanelShell>
+  );
 }
 
 function PostTripPanel({ trip }: { trip: Trip }) {
@@ -137,17 +405,112 @@ function PostTripPanel({ trip }: { trip: Trip }) {
   const [sent, setSent] = useState(false);
   const chosen = trip.options.find((option) => option.id === trip.selectedOptionId);
   const missing = trip.expenses.filter((expense) => expense.receiptRequired && !expense.receipt);
-  const slowest = trip.options.length ? Math.max(...trip.options.map((option) => option.doorToDoorMins)) : 0;
+  const slowest = trip.options.length
+    ? Math.max(...trip.options.map((option) => option.doorToDoorMins))
+    : 0;
   const saved = chosen ? Math.max(0, slowest - chosen.doorToDoorMins) : 0;
   const submit = () => {
-    log(trip.id, "post", `Feedback received: ${feedback}/5${comment.trim() ? ` · “${comment.trim()}”` : ""}`, modeFor(trip, "post"));
+    log(
+      trip.id,
+      "post",
+      `Feedback received: ${feedback}/5${comment.trim() ? ` · “${comment.trim()}”` : ""}`,
+      modeFor(trip, "post"),
+    );
     setSent(true);
     toast.success("Thanks — feedback will shape future recommendations");
   };
-  return <PanelShell eyebrow="Post-Trip Agent" title="Close out this trip"><div className="grid gap-3 sm:grid-cols-3"><DataPoint label="Spend" value={`${formatINR(spent)} of ${formatINR(trip.budgetINR)}`} /><DataPoint label="Time saved" value={chosen ? formatDuration(saved) : "—"} /><DataPoint label="Policy outcome" value={chosen ? `${chosen.policyScore}% compliant` : "—"} /></div><div className="mt-4 rounded-md bg-muted/50 p-4"><p className="font-semibold">Expense draft ready</p><p className="mt-1 text-sm text-muted-foreground">Bookings and card transactions have been matched. {missing.length ? `${missing.length} receipt${missing.length > 1 ? "s" : ""} still need${missing.length > 1 ? "" : "s"} review.` : "Every receipt is attached."}</p>{missing.length > 0 && <ul className="mt-3 space-y-2">{missing.map((expense) => <li key={expense.id} className="flex flex-wrap items-center justify-between gap-2 text-sm"><span>{expense.description} · {formatINR(expense.amountINR)}</span><ReceiptButton size="sm" variant="outline" onPick={(receipt) => { attachReceipt(trip.id, expense.id, receipt); toast.success("Receipt attached"); }}><FileUp />Upload receipt</ReceiptButton></li>)}</ul>}</div><div className="mt-4"><Label>How was the trip?</Label><div className="mt-2 flex gap-1">{[1,2,3,4,5].map((rating) => <Button key={rating} size="icon" variant="ghost" aria-label={`${rating} stars`} disabled={sent} onClick={() => setFeedback(rating)}><Star className={rating <= feedback ? "fill-warning text-warning" : "text-muted-foreground"} /></Button>)}</div>{feedback > 0 && !sent && <><Textarea className="mt-2" value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Optional feedback for future recommendations" aria-label="Trip feedback" /><Button className="mt-2" size="sm" onClick={submit}>Submit feedback</Button></>}{sent && <p className="mt-2 text-sm text-muted-foreground">Feedback submitted.</p>}</div></PanelShell>;
+  return (
+    <PanelShell eyebrow="Post-Trip Agent" title="Close out this trip">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <DataPoint label="Spend" value={`${formatINR(spent)} of ${formatINR(trip.budgetINR)}`} />
+        <DataPoint label="Time saved" value={chosen ? formatDuration(saved) : "—"} />
+        <DataPoint
+          label="Policy outcome"
+          value={chosen ? `${chosen.policyScore}% compliant` : "—"}
+        />
+      </div>
+      <div className="mt-4 rounded-md bg-muted/50 p-4">
+        <p className="font-semibold">Expense draft ready</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Bookings and card transactions have been matched.{" "}
+          {missing.length
+            ? `${missing.length} receipt${missing.length > 1 ? "s" : ""} still need${missing.length > 1 ? "" : "s"} review.`
+            : "Every receipt is attached."}
+        </p>
+        {missing.length > 0 && (
+          <ul className="mt-3 space-y-2">
+            {missing.map((expense) => (
+              <li
+                key={expense.id}
+                className="flex flex-wrap items-center justify-between gap-2 text-sm"
+              >
+                <span>
+                  {expense.description} · {formatINR(expense.amountINR)}
+                </span>
+                <ReceiptButton
+                  size="sm"
+                  variant="outline"
+                  onPick={(receipt) => {
+                    attachReceipt(trip.id, expense.id, receipt);
+                    toast.success("Receipt attached");
+                  }}
+                >
+                  <FileUp />
+                  Upload receipt
+                </ReceiptButton>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <div className="mt-4">
+        <Label>How was the trip?</Label>
+        <div className="mt-2 flex gap-1">
+          {[1, 2, 3, 4, 5].map((rating) => (
+            <Button
+              key={rating}
+              size="icon"
+              variant="ghost"
+              aria-label={`${rating} stars`}
+              disabled={sent}
+              onClick={() => setFeedback(rating)}
+            >
+              <Star
+                className={
+                  rating <= feedback ? "fill-warning text-warning" : "text-muted-foreground"
+                }
+              />
+            </Button>
+          ))}
+        </div>
+        {feedback > 0 && !sent && (
+          <>
+            <Textarea
+              className="mt-2"
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+              placeholder="Optional feedback for future recommendations"
+              aria-label="Trip feedback"
+            />
+            <Button className="mt-2" size="sm" onClick={submit}>
+              Submit feedback
+            </Button>
+          </>
+        )}
+        {sent && <p className="mt-2 text-sm text-muted-foreground">Feedback submitted.</p>}
+      </div>
+    </PanelShell>
+  );
 }
 
-function DataPoint({ label, value, wide }: { label: string; value: string; wide?: boolean }) { return <div className={`rounded-md bg-muted/50 p-3 ${wide ? "sm:col-span-2" : ""}`}><p className="text-xs font-semibold capitalize text-muted-foreground">{label}</p><p className="mt-1 text-sm font-medium">{value}</p></div>; }
+function DataPoint({ label, value, wide }: { label: string; value: string; wide?: boolean }) {
+  return (
+    <div className={`rounded-md bg-muted/50 p-3 ${wide ? "sm:col-span-2" : ""}`}>
+      <p className="text-xs font-semibold capitalize text-muted-foreground">{label}</p>
+      <p className="mt-1 text-sm font-medium">{value}</p>
+    </div>
+  );
+}
 function timeline(trip: Trip) {
   const hotel = findPlace(trip, "hotel")?.name ?? "your hotel";
   const meeting = findPlace(trip, "meeting")?.name ?? "the meeting venue";
@@ -158,5 +521,26 @@ function timeline(trip: Trip) {
     "19:30 · Return transfer begins",
   ];
 }
-function TimelineItem({ text }: { text: string }) { return <div className="flex items-center gap-2"><Clock3 className="size-4 text-primary" /><span>{text}</span></div>; }
-function Status({ label, value, alert }: { label: string; value: string; alert?: boolean }) { return <div className="rounded-md border p-3"><div className="flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground">{alert ? <AlertTriangle className="size-4 text-warning" /> : <Check className="size-4 text-success" />}{label}</div><p className="mt-2 text-sm font-medium">{value}</p></div>; }
+function TimelineItem({ text }: { text: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <Clock3 className="size-4 text-primary" />
+      <span>{text}</span>
+    </div>
+  );
+}
+function Status({ label, value, alert }: { label: string; value: string; alert?: boolean }) {
+  return (
+    <div className="rounded-md border p-3">
+      <div className="flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground">
+        {alert ? (
+          <AlertTriangle className="size-4 text-warning" />
+        ) : (
+          <Check className="size-4 text-success" />
+        )}
+        {label}
+      </div>
+      <p className="mt-2 text-sm font-medium">{value}</p>
+    </div>
+  );
+}

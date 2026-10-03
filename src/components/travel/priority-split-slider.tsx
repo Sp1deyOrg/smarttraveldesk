@@ -1,7 +1,6 @@
 import { useCallback, useRef, type KeyboardEvent, type PointerEvent } from "react";
 import type { Weights } from "@/lib/types";
-
-const MIN_SEGMENT = 10;
+import { MIN_SEGMENT, moveDivider as nextWeights } from "@/lib/weights";
 
 interface PrioritySplitSliderProps {
   value: Weights;
@@ -9,18 +8,17 @@ interface PrioritySplitSliderProps {
   label?: string;
 }
 
-export function PrioritySplitSlider({ value, onChange, label = "Trip priorities" }: PrioritySplitSliderProps) {
+export function PrioritySplitSlider({
+  value,
+  onChange,
+  label = "Trip priorities",
+}: PrioritySplitSliderProps) {
   const trackRef = useRef<HTMLDivElement>(null);
 
-  const moveDivider = useCallback((divider: "time" | "cost", position: number) => {
-    if (divider === "time") {
-      const nextTime = Math.max(MIN_SEGMENT, Math.min(100 - value.cost - MIN_SEGMENT, position));
-      onChange({ time: nextTime, comfort: 100 - nextTime - value.cost, cost: value.cost });
-      return;
-    }
-    const boundary = Math.max(value.time + MIN_SEGMENT, Math.min(100 - MIN_SEGMENT, position));
-    onChange({ time: value.time, comfort: boundary - value.time, cost: 100 - boundary });
-  }, [onChange, value]);
+  const moveDivider = useCallback(
+    (divider: "time" | "cost", position: number) => onChange(nextWeights(value, divider, position)),
+    [onChange, value],
+  );
 
   const moveFromPointer = (divider: "time" | "cost", event: PointerEvent<HTMLButtonElement>) => {
     const track = trackRef.current;
@@ -32,7 +30,8 @@ export function PrioritySplitSlider({ value, onChange, label = "Trip priorities"
   };
 
   const moveFromKeyboard = (divider: "time" | "cost", event: KeyboardEvent<HTMLButtonElement>) => {
-    if (!["ArrowLeft", "ArrowDown", "ArrowRight", "ArrowUp", "Home", "End"].includes(event.key)) return;
+    if (!["ArrowLeft", "ArrowDown", "ArrowRight", "ArrowUp", "Home", "End"].includes(event.key))
+      return;
     event.preventDefault();
     const step = event.shiftKey ? 5 : 1;
     const current = divider === "time" ? value.time : value.time + value.comfort;
@@ -40,7 +39,11 @@ export function PrioritySplitSlider({ value, onChange, label = "Trip priorities"
     const maximum = divider === "time" ? 100 - value.cost - MIN_SEGMENT : 100 - MIN_SEGMENT;
     if (event.key === "Home") moveDivider(divider, minimum);
     else if (event.key === "End") moveDivider(divider, maximum);
-    else moveDivider(divider, current + (["ArrowRight", "ArrowUp"].includes(event.key) ? step : -step));
+    else
+      moveDivider(
+        divider,
+        current + (["ArrowRight", "ArrowUp"].includes(event.key) ? step : -step),
+      );
   };
 
   return (
@@ -54,9 +57,21 @@ export function PrioritySplitSlider({ value, onChange, label = "Trip priorities"
         className="relative flex h-14 w-full overflow-visible rounded-md border bg-muted shadow-sm"
         aria-label={`${label}: Time ${value.time}%, Comfort ${value.comfort}%, Cost ${value.cost}%`}
       >
-        <PrioritySegment label="Time" value={value.time} className="rounded-l-[5px] bg-primary text-primary-foreground" />
-        <PrioritySegment label="Comfort" value={value.comfort} className="bg-accent text-accent-foreground" />
-        <PrioritySegment label="Cost" value={value.cost} className="rounded-r-[5px] bg-warning text-warning-foreground" />
+        <PrioritySegment
+          label="Time"
+          value={value.time}
+          className="rounded-l-[5px] bg-primary text-primary-foreground"
+        />
+        <PrioritySegment
+          label="Comfort"
+          value={value.comfort}
+          className="bg-accent text-accent-foreground"
+        />
+        <PrioritySegment
+          label="Cost"
+          value={value.cost}
+          className="rounded-r-[5px] bg-warning text-warning-foreground"
+        />
         <Divider
           label="Time and comfort divider"
           value={value.time}
@@ -78,22 +93,45 @@ export function PrioritySplitSlider({ value, onChange, label = "Trip priorities"
           onKeyDown={(event) => moveFromKeyboard("cost", event)}
         />
       </div>
-      <p className="text-xs text-muted-foreground">Drag either divider, or focus it and use the arrow keys. Hold Shift for 5% steps.</p>
+      <p className="text-xs text-muted-foreground">
+        Drag either divider, or focus it and use the arrow keys. Hold Shift for 5% steps.
+      </p>
     </fieldset>
   );
 }
 
-function PrioritySegment({ label, value, className }: { label: string; value: number; className: string }) {
+function PrioritySegment({
+  label,
+  value,
+  className,
+}: {
+  label: string;
+  value: number;
+  className: string;
+}) {
   return (
-    <div className={`grid min-w-0 place-items-center transition-[width] ${className}`} style={{ width: `${value}%` }}>
+    <div
+      className={`grid min-w-0 place-items-center transition-[width] ${className}`}
+      style={{ width: `${value}%` }}
+    >
       <span className="truncate px-1 text-center text-[11px] font-bold leading-tight sm:text-xs">
-        {label}<span className="block">{value}%</span>
+        {label}
+        <span className="block">{value}%</span>
       </span>
     </div>
   );
 }
 
-function Divider({ label, value, valueText, min, max, position, onPointerMove, onKeyDown }: {
+function Divider({
+  label,
+  value,
+  valueText,
+  min,
+  max,
+  position,
+  onPointerMove,
+  onKeyDown,
+}: {
   label: string;
   value: number;
   valueText: string;
@@ -120,7 +158,10 @@ function Divider({ label, value, valueText, min, max, position, onPointerMove, o
       }}
       onKeyDown={onKeyDown}
     >
-      <span className="h-8 w-1 rounded-full bg-background shadow-[0_0_0_1px_var(--color-border)]" aria-hidden="true" />
+      <span
+        className="h-8 w-1 rounded-full bg-background shadow-[0_0_0_1px_var(--color-border)]"
+        aria-hidden="true"
+      />
     </button>
   );
 }

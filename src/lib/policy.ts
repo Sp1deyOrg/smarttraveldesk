@@ -1,4 +1,4 @@
-import type { ItineraryOption, Preferences, Trip, Weights } from "./types";
+import type { ItineraryOption, Preferences, Weights } from "./types";
 
 export interface GradePolicy {
   grade: string;
@@ -9,51 +9,74 @@ export interface GradePolicy {
   cab: string;
 }
 
-/** Grade-wise policy. Mutable so Travel Desk edits apply to scoring everywhere. */
-export const POLICY_GRADES: GradePolicy[] = [
-  { grade: "L3", label: "Senior Associate", metroCap: 6000, otherCap: 4500, economyUnderHrs: 6, cab: "Sedan" },
-  { grade: "L4", label: "Manager", metroCap: 8000, otherCap: 6000, economyUnderHrs: 3, cab: "Sedan" },
-  { grade: "L5", label: "Senior Manager", metroCap: 11000, otherCap: 8500, economyUnderHrs: 2, cab: "Sedan or SUV" },
-  { grade: "L6", label: "Director", metroCap: 15000, otherCap: 11000, economyUnderHrs: 0, cab: "Premium sedan" },
-];
+/** Default grade-wise policy. Travel Desk edits produce a new array; this one is never mutated. */
+export const DEFAULT_GRADES: readonly GradePolicy[] = Object.freeze([
+  {
+    grade: "L3",
+    label: "Senior Associate",
+    metroCap: 6000,
+    otherCap: 4500,
+    economyUnderHrs: 6,
+    cab: "Sedan",
+  },
+  {
+    grade: "L4",
+    label: "Manager",
+    metroCap: 8000,
+    otherCap: 6000,
+    economyUnderHrs: 3,
+    cab: "Sedan",
+  },
+  {
+    grade: "L5",
+    label: "Senior Manager",
+    metroCap: 11000,
+    otherCap: 8500,
+    economyUnderHrs: 2,
+    cab: "Sedan or SUV",
+  },
+  {
+    grade: "L6",
+    label: "Director",
+    metroCap: 15000,
+    otherCap: 11000,
+    economyUnderHrs: 0,
+    cab: "Premium sedan",
+  },
+]);
+
 export const TRAVELLER_GRADE = "L4";
-export function gradePolicy(grade = TRAVELLER_GRADE): GradePolicy {
-  return POLICY_GRADES.find((p) => p.grade === grade) ?? (POLICY_GRADES[1] as GradePolicy);
-}
-export function applyGradePolicies(next: GradePolicy[]) {
-  POLICY_GRADES.splice(0, POLICY_GRADES.length, ...next.map((g) => ({ ...g })));
+
+export function gradePolicy(grades: readonly GradePolicy[], grade: string): GradePolicy {
+  return grades.find((p) => p.grade === grade) ?? (DEFAULT_GRADES[1] as GradePolicy);
 }
 
-export const POLICY = {
-  grade: "L4 (Manager)",
-  rules: [
-    "Economy class for flights under 3 hours",
-    "Hotel cap ₹8,000 / night in metro cities",
-    "Hotel cap ₹6,000 / night in non-metro cities",
-    "Sedan category cabs (no premium / SUV)",
-    "Bookings at least 5 days before departure",
-  ],
-  hotelCap: (tier: "metro" | "other") =>
-    tier === "metro" ? gradePolicy().metroCap : gradePolicy().otherCap,
-};
+export function hotelCap(policy: GradePolicy, tier: "metro" | "other"): number {
+  return tier === "metro" ? policy.metroCap : policy.otherCap;
+}
 
 export function policyViolations(
   option: ItineraryOption,
   tier: "metro" | "other",
+  policy: GradePolicy,
 ): string[] {
   const out: string[] = [...option.violations];
-  const cap = POLICY.hotelCap(tier);
+  const cap = hotelCap(policy, tier);
   if (option.hotelNightlyINR > cap) {
     out.push(
       `Hotel is ${Math.round(((option.hotelNightlyINR - cap) / cap) * 100)}% above the ₹${cap.toLocaleString("en-IN")} per-night cap for your grade`,
     );
   }
-  const econHrs = gradePolicy().economyUnderHrs;
+  const econHrs = policy.economyUnderHrs;
   if (/business/i.test(option.flight) && option.doorToDoorMins < econHrs * 60) {
-    out.push(`Business class is not allowed on flights under ${econHrs} hours at grade L4`);
+    out.push(
+      `Business class is not allowed on flights under ${econHrs} hours at grade ${policy.grade}`,
+    );
   }
-  if (/SUV|premium/i.test(option.cab)) {
-    out.push("Cab class is above the sedan limit for grade L4");
+  const allowsSuv = /SUV|premium/i.test(policy.cab);
+  const allowsPremium = /premium/i.test(policy.cab);
+  if ((/SUV/i.test(option.cab) && !allowsSuv) || (/premium/i.test(option.cab) && !allowsPremium)) {
+    out.push(`Cab class is above the ${policy.cab.toLowerCase()} limit for grade ${policy.grade}`);
   }
   return Array.from(new Set(out));
 }
@@ -63,6 +86,7 @@ export function scoreOption(
   all: ItineraryOption[],
   weights: Weights,
   tier: "metro" | "other",
+  policy: GradePolicy,
   prefs?: Preferences,
 ): number {
   const costs = all.map((o) => o.costINR);
@@ -73,10 +97,9 @@ export function scoreOption(
   const comfortScore = (option.comfort / 5) * 100;
 
   let score =
-    (weights.cost * costScore + weights.time * timeScore + weights.comfort * comfortScore) /
-    100;
+    (weights.cost * costScore + weights.time * timeScore + weights.comfort * comfortScore) / 100;
 
-  const violations = policyViolations(option, tier);
+  const violations = policyViolations(option, tier, policy);
   score -= violations.length * 12;
 
   if (prefs) {
@@ -93,13 +116,14 @@ export function rankOptions(
   options: ItineraryOption[],
   weights: Weights,
   tier: "metro" | "other",
+  policy: GradePolicy,
   prefs?: Preferences,
 ) {
   return options
     .map((o) => ({
       option: o,
-      score: scoreOption(o, options, weights, tier, prefs),
-      violations: policyViolations(o, tier),
+      score: scoreOption(o, options, weights, tier, policy, prefs),
+      violations: policyViolations(o, tier, policy),
     }))
     .sort((a, b) => b.score - a.score);
 }
