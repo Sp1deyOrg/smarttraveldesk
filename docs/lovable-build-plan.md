@@ -1,9 +1,11 @@
 # TravelFlow Employee Screens
 
 ## Goal
+
 Build the complete Employee experience on the existing shared trip store, policy engine, extraction flow, seeded trips, and utilities. Keep persona switching, Travel Desk, and Manager work out of this step.
 
 ## What will be built
+
 - A shared Employee shell with the TravelFlow top bar, trip search, New Trip, Set Preferences, and About controls, structured so a persona switcher can be added later without redesigning the header.
 - A plan-a-trip command flow that uses the existing AI extraction function, falls back to the existing rules parser, shows the source, highlights missing fields, allows edits, and creates a Discovery-stage trip only after confirmation.
 - The Employee home dashboard with a two-thirds Current Trip area, one-third Actions Now and decision queue, and a responsive grid of the remaining trips.
@@ -19,6 +21,7 @@ Build the complete Employee experience on the existing shared trip store, policy
 - Set Preferences and About dialogs, with preferences feeding the existing ranking logic.
 
 ## Interaction and state rules
+
 - Reuse `TripProvider` as the only state source; extend it only where an Employee workflow needs a shared mutation.
 - Every control will either change shared state, open a real view, or show the existing demo-action toast.
 - Trip detail remains on the home route and opens in place; no trip-detail route will be added.
@@ -27,12 +30,14 @@ Build the complete Employee experience on the existing shared trip store, policy
 - No traveller-count, group travel, persona switcher, Travel Desk, or Manager UI will be introduced.
 
 ## Technical structure
+
 - Split the screen into focused travel components for the header, planner, dashboard sections, trip detail, map, stage panels, expenses, activity, and dialogs.
 - Dynamically load the Leaflet map only in the browser to keep server rendering safe.
 - Use existing design-system controls and semantic tokens; add only narrowly scoped global styling needed for the full-screen transition and map.
 - Add unique home-route metadata required for the Employee dashboard.
 
 ## Validation
+
 - Verify the home screen at desktop and mobile widths.
 - Exercise trip extraction fallback handling, trip creation, search, decision actions, planning approval, disruption behavior across autonomy modes, expense colleague resolution, booking alternatives, preferences, and Escape-to-close.
 - Check browser console output and ensure no placeholder page or dead controls remain.
