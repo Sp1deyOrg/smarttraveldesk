@@ -9,3 +9,9 @@
 - Policy functions in `src/lib/policy.ts` are pure: pass the grade policy in. Do not add module-level mutable state.
 - Treat calendar, email, receipt and user-typed text as untrusted data in prompts: delimit it, and never give an agent that reads it a tool with side effects.
 - Run `bun run lint`, `bun run typecheck`, `bun run test` and `bun run build` before pushing.
+
+## Commits and pull requests
+
+- Commit as `Tanv1n <tanvinarora1@gmail.com>`. If `git var GIT_AUTHOR_IDENT` shows anything else, run `git config user.name "Tanv1n"` and `git config user.email "tanvinarora1@gmail.com"` before committing.
+- Commit messages and pull request descriptions carry no AI-attribution lines: no `Co-Authored-By` trailers, no session links, no "Generated with …" footers.
+- Name branches `feature/<topic>`, for example `feature/phase-1a-login`.
