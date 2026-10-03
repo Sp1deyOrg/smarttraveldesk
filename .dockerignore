@@ -1,0 +1,10 @@
+node_modules
+.output
+dist
+.git
+.github
+.vscode
+.idea
+*.log
+.env*
+tests

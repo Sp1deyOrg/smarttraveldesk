@@ -1,0 +1,50 @@
+name: Deploy dev
+
+# Builds the image and deploys it to the dev Cloud Run service on every push
+# to main. Skips until infra/bootstrap.sh has run and its output values are
+# saved as repository variables.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    if: ${{ vars.GCP_PROJECT_ID != '' }}
+    runs-on: ubuntu-latest
+    env:
+      IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GCP_AR_REPO }}/${{ vars.GCP_SERVICE }}:${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SA }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - run: gcloud auth configure-docker ${{ vars.GCP_REGION }}-docker.pkg.dev --quiet
+      - run: docker build -t "$IMAGE" .
+      - run: docker push "$IMAGE"
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy "${{ vars.GCP_SERVICE }}" \
+            --project "${{ vars.GCP_PROJECT_ID }}" \
+            --region "${{ vars.GCP_REGION }}" \
+            --image "$IMAGE" \
+            --service-account "${{ vars.GCP_RUNTIME_SA }}" \
+            --allow-unauthenticated \
+            --min-instances 0 --max-instances 3 --concurrency 40 \
+            --cpu 1 --memory 1Gi --timeout 300 \
+            --set-env-vars "GOOGLE_VERTEX_PROJECT=${{ vars.GCP_PROJECT_ID }},GOOGLE_VERTEX_LOCATION=${{ vars.GCP_REGION }},GEMINI_FLASH_MODEL=${{ vars.GEMINI_FLASH_MODEL || 'gemini-3.5-flash' }}"
+      - name: Smoke test
+        run: |
+          url="$(gcloud run services describe "${{ vars.GCP_SERVICE }}" --region "${{ vars.GCP_REGION }}" --format='value(status.url)')"
+          echo "Deployed: $url"
+          curl -fsS -o /dev/null -w "GET / -> %{http_code}\n" "$url/"
