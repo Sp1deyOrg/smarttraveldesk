@@ -8,6 +8,8 @@
 - Agents never book, hold, cancel, spend or submit expenses on their own. Those actions run only from a human click, on the server, after re-checking price and policy.
 - Policy functions in `src/lib/policy.ts` are pure: pass the grade policy in. Do not add module-level mutable state.
 - Treat calendar, email, receipt and user-typed text as untrusted data in prompts: delimit it, and never give an agent that reads it a tool with side effects.
+- Every LLM call goes through `runLlm` in `src/server/agents/llm.ts` and declares a data class (`synthetic`, `employee_text` or `employee_records`). Do not call a model SDK from anywhere else. The provider is chosen by `LLM_PROVIDER` and never fails over to the other one.
+- Third-party providers (apinex) never receive `employee_records`. They take `employee_text` only while `ALLOW_THIRD_PARTY_LLM_UNTIL` names a future date, with identifiers masked first. Do not widen this without the owner's written approval, and keep keys out of the repo, logs and chat.
 - Run `bun run lint`, `bun run typecheck`, `bun run test` and `bun run build` before pushing.
 
 ## Commits and pull requests
