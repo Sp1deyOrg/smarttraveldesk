@@ -200,6 +200,7 @@ function TripPlanner({
   const [request, setRequest] = useState("");
   const [result, setResult] = useState<TripExtraction | null>(null);
   const [source, setSource] = useState<"ai" | "rules">("ai");
+  const [provider, setProvider] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const analyse = async () => {
@@ -210,11 +211,13 @@ function TripPlanner({
     setLoading(true);
     try {
       const extraction = await runExtraction({ data: { text: request.trim() } });
-      setResult(extraction);
+      setResult(extraction.brief);
       setSource("ai");
+      setProvider(extraction.provider);
     } catch {
       setResult(ruleParse(request.trim()));
       setSource("rules");
+      setProvider(null);
       toast("AI extraction was unavailable, so TravelFlow used its rule parser.");
     } finally {
       setLoading(false);
@@ -292,6 +295,7 @@ function TripPlanner({
         <ConfirmationCard
           result={result}
           source={source}
+          provider={provider}
           onUpdate={update}
           onCancel={() => setResult(null)}
           onConfirm={create}
@@ -304,12 +308,14 @@ function TripPlanner({
 function ConfirmationCard({
   result,
   source,
+  provider,
   onUpdate,
   onCancel,
   onConfirm,
 }: {
   result: TripExtraction;
   source: "ai" | "rules";
+  provider: string | null;
   onUpdate: (field: keyof TripExtraction, value: string | number) => void;
   onCancel: () => void;
   onConfirm: () => void;
@@ -322,7 +328,9 @@ function ConfirmationCard({
           <div className="flex items-center gap-2">
             <h2 className="font-bold">Confirm the trip brief</h2>
             <Badge variant={source === "ai" ? "default" : "outline"}>
-              {source === "ai" ? "AI extracted" : "Rules fallback"}
+              {source === "ai"
+                ? `AI extracted${provider ? ` (${provider})` : ""}`
+                : "Rules fallback"}
             </Badge>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
