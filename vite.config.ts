@@ -3,10 +3,23 @@ import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv, type Plugin } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 
 const src = fileURLToPath(new URL("./src", import.meta.url));
+
+// `vite dev` leaves .env out of process.env, so server code would never see
+// LLM_PROVIDER or the keys. Load it for local development only: a build runs on
+// Cloud Run, which passes real environment variables, and a value already set wins.
+const devEnv = (): Plugin => ({
+  name: "dev-env",
+  apply: "serve",
+  config(_, { mode }) {
+    for (const [key, value] of Object.entries(loadEnv(mode, process.cwd(), ""))) {
+      process.env[key] ??= value;
+    }
+  },
+});
 
 export default defineConfig(({ command }) => ({
   server: { port: 8080 },
@@ -22,6 +35,7 @@ export default defineConfig(({ command }) => ({
     ],
   },
   plugins: [
+    devEnv(),
     tailwindcss(),
     tsConfigPaths({ projects: ["./tsconfig.json"] }),
     tanstackStart({

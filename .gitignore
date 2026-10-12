@@ -16,6 +16,11 @@ dist-ssr
 .nitro
 *.local
 
+# Local secrets: keys never go in the repo (copy .env.example to .env)
+.env
+.env.*
+!.env.example
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
