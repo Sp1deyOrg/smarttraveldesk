@@ -125,6 +125,14 @@ function options(base: number, city: string, tierCap: number): ItineraryOption[]
   ];
 }
 
+/**
+ * Mock ranked options for a trip the employee created in the planner, standing
+ * in for live flight and hotel search (Phase 2).
+ */
+export function draftOptions(city: string, cityTier: Trip["cityTier"]): ItineraryOption[] {
+  return cityTier === "metro" ? options(24800, city, 8000) : options(18600, city, 6000);
+}
+
 export const TRIPS: Trip[] = [
   {
     id: "TRV-2481",

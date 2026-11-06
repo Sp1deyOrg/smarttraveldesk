@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 import { INITIAL_DECISIONS, TRIPS } from "./trip-data";
 import { INITIAL_ESCALATIONS, INITIAL_EXCEPTIONS, type InvoiceStatus } from "./desk-data";
 import { DEFAULT_GRADES, TRAVELLER_GRADE, gradePolicy, type GradePolicy } from "./policy";
+import { confirmedBookings } from "./trip-utils";
 import type {
   ActivityEntry,
   AgentId,
@@ -215,7 +216,13 @@ export function TripProvider({ children }: { children: ReactNode }) {
         const approvedOption = x.optionId;
         if (status === "approved" && approvedOption) {
           updateTrip(x.tripId, (t): Partial<Trip> =>
-            t.stage === "planning" ? { selectedOptionId: approvedOption, stage: "confirmed" } : {},
+            t.stage === "planning"
+              ? {
+                  selectedOptionId: approvedOption,
+                  stage: "confirmed",
+                  bookings: confirmedBookings(t, approvedOption),
+                }
+              : {},
           );
         }
         const linked = escalations.find((e) => e.id === x.escalationId || e.exceptionId === id);

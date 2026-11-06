@@ -1,5 +1,5 @@
-import { STAGES, type Place, type Stage, type Trip } from "./types";
-import { distanceKm } from "./geo";
+import { STAGES, type Booking, type Place, type Stage, type Trip } from "./types";
+import { distanceKm, formatINR } from "./geo";
 
 export const stageIndex = (s: Stage) => STAGES.findIndex((x) => x.id === s);
 
@@ -106,4 +106,47 @@ export function alternativeWindows(trip: Trip, weeks = [1, 2, 3]): DateWindow[] 
     const endDate = shift(trip.endDate, w * 7);
     return { startDate, endDate, label: formatDateRange({ ...trip, startDate, endDate }) };
   });
+}
+
+/**
+ * Bookings after a person approves an itinerary option, so the Confirmed stage
+ * shows the chosen flight, hotel and cab with references instead of the
+ * "Pending" placeholders. Bookings that are already confirmed are kept.
+ */
+export function confirmedBookings(trip: Trip, optionId: string): Booking[] {
+  const option = trip.options.find((o) => o.id === optionId);
+  if (!option) return trip.bookings;
+  const seed = Number(trip.id.replace(/\D/g, "")) || 1;
+  // Always six base-36 characters: 36^5 + (hash mod (36^6 - 36^5)).
+  const code = (n: number) =>
+    (60_466_176 + ((seed * 7919 + n * 104_729) % 2_116_316_160)).toString(36).toUpperCase();
+  const day = (iso: string) => {
+    const d = new Date(iso);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  };
+  const nights = Math.max(1, Math.round((day(trip.endDate) - day(trip.startDate)) / 86_400_000));
+  const [flightName = option.flight, ...flightRest] = option.flight.split(" · ");
+  const confirmed: Record<Booking["type"], Pick<Booking, "title" | "detail" | "ref">> = {
+    flight: {
+      title: flightName,
+      detail: [`${trip.originCity} → ${trip.city}`, ...flightRest].join(" · "),
+      ref: `PNR ${code(1)}`,
+    },
+    hotel: option.hotelNightlyINR
+      ? {
+          title: option.hotel,
+          detail: `${nights} night${nights === 1 ? "" : "s"} · ${formatINR(option.hotelNightlyINR)} / night`,
+          ref: `HTL-${code(2).slice(-5)}`,
+        }
+      : { title: option.hotel, detail: "Same-day return", ref: "Not needed" },
+    cab: {
+      title: option.cab,
+      detail: "Airport → hotel · pickup aligned to arrival",
+      ref: `CAB-${code(3).slice(-5)}`,
+    },
+  };
+  return trip.bookings.map((b) =>
+    b.status === "Confirmed" ? b : { ...b, ...confirmed[b.type], status: "Confirmed" },
+  );
 }

@@ -22,7 +22,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatDuration, formatINR } from "@/lib/geo";
 import { rankOptions } from "@/lib/policy";
 import { EMPLOYEE_NAME } from "@/lib/desk-data";
-import { findPlace, alternativeWindows, type DateWindow } from "@/lib/trip-utils";
+import { draftOptions } from "@/lib/trip-data";
+import {
+  alternativeWindows,
+  confirmedBookings,
+  findPlace,
+  type DateWindow,
+} from "@/lib/trip-utils";
 import { buildIcs, buildTicketsHtml, downloadFile } from "@/lib/trip-files";
 import { modeFor, useTrips } from "@/lib/store";
 import type { Trip } from "@/lib/types";
@@ -96,6 +102,18 @@ function DiscoveryPanel({ trip }: { trip: Trip }) {
               "Requirements approved and handed to Pre-Trip Agent",
               modeFor(trip, "discovery"),
             );
+            // New trips have no options yet: draft mock ones until live search (Phase 2).
+            const drafted = trip.options.length
+              ? trip.options
+              : draftOptions(trip.city, trip.cityTier);
+            updateTrip(trip.id, { options: drafted, activeAgent: "pretrip" });
+            if (!trip.options.length)
+              log(
+                trip.id,
+                "pretrip",
+                `Built ${drafted.length} ranked itinerary options · awaiting your choice`,
+                "auto",
+              );
             toast.success("Trip need approved");
           }}
         >
@@ -183,6 +201,7 @@ function PlanningPanel({ trip }: { trip: Trip }) {
     updateTrip(trip.id, {
       selectedOptionId: optionId,
       stage: "confirmed",
+      bookings: confirmedBookings(trip, optionId),
       activeAgent: "pretrip",
       lastAction: `Approved ${label} · bookings being confirmed`,
     });
@@ -214,7 +233,7 @@ function PlanningPanel({ trip }: { trip: Trip }) {
               </div>
               <div className="text-right">
                 <p className="text-lg font-bold">{formatINR(option.costINR)}</p>
-                <p className="text-xs text-muted-foreground">Agent score {score}</p>
+                <p className="text-xs text-muted-foreground">Agent score {Math.min(score, 100)}</p>
               </div>
             </div>
             <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
@@ -325,9 +344,13 @@ function LivePanel({ trip }: { trip: Trip }) {
     }
     const auto = trip.autonomy.live === "auto";
     const suggestOnly = trip.autonomy.live === "suggest";
+    const flightNo = trip.live.flight.split(" · ")[0];
+    const delayed = trip.live.flight.includes("On time")
+      ? trip.live.flight.replace("On time", "Delayed 2h")
+      : `${trip.live.flight} · Delayed 2h`;
     updateTrip(trip.id, {
       live: {
-        flight: `${trip.live.flight} · delayed 2h`,
+        flight: delayed,
         cab: suggestOnly ? trip.live.cab : "Pickup moved by 2 hours",
         hotel: trip.live.hotel,
         disrupted: true,
@@ -366,7 +389,7 @@ function LivePanel({ trip }: { trip: Trip }) {
         tripId: trip.id,
         kind: "sameday",
         title: "Same-day change: rebook after 2-hour delay",
-        detail: `${trip.live.flight} delayed 2h. Traveller approval pending; desk to secure seats on the next departure.`,
+        detail: `${flightNo} delayed 2h. Traveller approval pending; desk to secure seats on the next departure.`,
         slaMins: 30,
       });
       toast.warning("Rebooking needs your approval");

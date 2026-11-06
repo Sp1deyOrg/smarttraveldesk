@@ -24,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatDuration, formatINR } from "@/lib/geo";
 import { policyViolations, rankOptions, type GradePolicy } from "@/lib/policy";
 import { useTrips } from "@/lib/store";
+import { confirmedBookings } from "@/lib/trip-utils";
 import {
   COMPANY_GSTIN,
   DEPARTMENT_SPEND,
@@ -349,10 +350,11 @@ function BookingConsole({
   );
   if (!trip) return null;
   const confirm = (id: string, label: string) => {
-    updateTrip(trip.id, (t) => ({
-      selectedOptionId: id,
-      stage: t.stage === "planning" || t.stage === "discovery" ? "confirmed" : t.stage,
-    }));
+    updateTrip(trip.id, (t) =>
+      t.stage === "planning" || t.stage === "discovery"
+        ? { selectedOptionId: id, stage: "confirmed", bookings: confirmedBookings(t, id) }
+        : { selectedOptionId: id },
+    );
     log(trip.id, "pretrip", `Travel Desk confirmed '${label}'`, "approval");
     escalations
       .filter((e) => e.tripId === trip.id && e.status === "open")
@@ -406,7 +408,7 @@ function BookingConsole({
                 <div className="text-right">
                   <p className="font-bold">{formatINR(option.costINR)}</p>
                   <p className="text-xs text-muted-foreground">
-                    Score {score} · {formatDuration(option.doorToDoorMins)}
+                    Score {Math.min(score, 100)} · {formatDuration(option.doorToDoorMins)}
                   </p>
                 </div>
               </div>
@@ -512,7 +514,7 @@ function Tracker() {
   }));
   return (
     <section className="grid items-start gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
-      <div className="h-[520px] overflow-hidden rounded-md border bg-muted">
+      <div className="isolate h-[520px] overflow-hidden rounded-md border bg-muted">
         {hydrated ? (
           <Suspense fallback={<MapLoading />}>
             <TripMap places={places} />

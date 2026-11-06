@@ -2,7 +2,7 @@
 
 An agentic corporate travel and expense (T&E) portal with Employee, Travel Desk and Manager portals. Agents do the rule-based work (detecting trips, ranking options, checking policy and GST, drafting expenses); people make the decisions.
 
-The original product spec is in [docs/original-spec.md](docs/original-spec.md).
+The original product spec is in [docs/original-spec.md](docs/original-spec.md). To present the app, follow [docs/demo-guide.md](docs/demo-guide.md).
 
 ## Status
 

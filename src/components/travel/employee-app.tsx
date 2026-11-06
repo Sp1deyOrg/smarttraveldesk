@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { extractTrip, type TripExtraction } from "@/lib/extract-trip.functions";
+import { placesForCity } from "@/lib/city-geo";
 import { ruleParse } from "@/lib/rule-parser";
 import { newTripId, useTrips } from "@/lib/store";
 import { currentTrip, formatDateRange, stageProgress, timedActions } from "@/lib/trip-utils";
@@ -680,24 +681,7 @@ function makeDiscoveryTrip(id: string, result: TripExtraction, source: "ai" | "r
     activeAgent: "discovery",
     lastAction: "Reviewing business need, calendar conflicts and policy fit",
     weights: { time: result.weightTime, comfort: result.weightComfort, cost: result.weightCost },
-    places: [
-      {
-        id: "meeting",
-        kind: "meeting",
-        name: result.meetingVenue.trim(),
-        lat: 12.2958,
-        lng: 76.6394,
-        detail: city,
-      },
-      { id: "hotel", kind: "hotel", name: "Hotel to be selected", lat: 12.3044, lng: 76.6552 },
-      {
-        id: "airport",
-        kind: "airport",
-        name: "Arrival point to be confirmed",
-        lat: 12.2308,
-        lng: 76.6558,
-      },
-    ],
+    places: placesForCity(city, result.meetingVenue),
     bookings: [
       {
         id: "b-flight",

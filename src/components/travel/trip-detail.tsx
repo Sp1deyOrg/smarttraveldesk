@@ -110,6 +110,9 @@ export function TripDetail({ trip, onClose }: { trip: Trip; onClose: () => void 
       }}
     >
       <article
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${trip.title} trip details`}
         className="animate-expand h-full overflow-y-auto bg-background shadow-2xl sm:rounded-md"
         onMouseDown={(event) => event.stopPropagation()}
       >
@@ -141,7 +144,7 @@ export function TripDetail({ trip, onClose }: { trip: Trip; onClose: () => void 
         <div className="mx-auto grid max-w-[1500px] gap-5 px-4 py-6 sm:px-6 xl:grid-cols-[minmax(300px,0.72fr)_minmax(0,1.6fr)]">
           <aside className="space-y-5">
             <section>
-              <div className="relative h-[430px] overflow-hidden rounded-md border bg-muted">
+              <div className="relative isolate h-[430px] overflow-hidden rounded-md border bg-muted">
                 <div className="absolute left-2 right-2 top-2 z-[400] grid grid-cols-4 gap-1 rounded-md bg-card/95 p-1 shadow-sm backdrop-blur">
                   {(["airport", "hotel", "restaurant", "meeting"] as const).map((kind) => {
                     const Icon = placeIcons[kind];

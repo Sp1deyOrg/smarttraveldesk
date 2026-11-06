@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { type ReactNode } from "react";
 
+import leafletCss from "leaflet/dist/leaflet.css?url";
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
 import { TripProvider } from "@/lib/store";
@@ -92,7 +93,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       {
         rel: "stylesheet",
-        href: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
+        href: leafletCss,
       },
       {
         rel: "stylesheet",
@@ -129,7 +130,7 @@ function RootComponent() {
       <TripProvider>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
-        <Toaster position="top-right" richColors closeButton />
+        <Toaster position="bottom-right" richColors closeButton />
       </TripProvider>
     </QueryClientProvider>
   );
